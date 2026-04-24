@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Controle do Cartão - Sistema Multi-Usuário</title>
+    <title>Controle do Cartão - Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
@@ -467,12 +467,6 @@
             display: none;
         }
 
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: var(--primary);
-        }
-
         @media (max-width: 700px) {
             body { padding: 12px; font-size: 16px; }
             .stat-card .value { font-size: 1.3rem; }
@@ -606,7 +600,7 @@
                     <table class="data-table">
                         <thead><tr><th>Nome</th><th>Cartão</th><th>Total Parcelas</th><th>Valor</th><th>Total Pago</th><th>Data Quitação</th><th>WhatsApp</th></tr></thead>
                         <tbody id="quitadasTableBody"></tbody>
-                    </table>
+                    追赶
                 </div>
             </div>
 
@@ -616,7 +610,7 @@
                     <table class="data-table">
                         <thead><tr><th>Nome</th><th>Cartão</th><th>Parcela</th><th>Valor</th><th>Restantes</th><th>Total Pendente</th><th>Vencimento</th><th>WhatsApp</th></tr></thead>
                         <tbody id="tableBody"></tbody>
-                    </table>
+                    追赶
                 </div>
             </div>
         </div>
@@ -634,8 +628,8 @@
 </div>
 
 <script>
-    // SEU LINK DO APPS SCRIPT
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzFVHyUcEFsTIl4NOHJNjzou1kUAEAPL4trXv6NMEDAWtGfgKhT8Q-gYMmfwD16hjVxaw/exec';
+    // ✅ SEU NOVO LINK DO APPS SCRIPT ✅
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxMPSCOhiyj0-3cDYROQwhfeYGq7mYOh-aFYHPiGe1HiMMhKG6HjFzicqHGzWEQJbgBZg/exec';
     const SENHA_ADMIN = "270601";
     const CARD_DUE = { A: 10, B: 25 };
     
@@ -702,13 +696,12 @@
                     pagamentos: row[8] ? JSON.parse(row[8]) : []
                 }));
                 nextId = dividas.length > 0 ? Math.max(...dividas.map(d => d.id)) + 1 : 1;
-                console.log("Dados carregados:", dividas.length);
+                console.log("✅ Dados carregados:", dividas.length);
                 return true;
             }
             return false;
         } catch(e) {
             console.error("Erro ao carregar:", e);
-            alert("Erro ao carregar dados: " + e.message);
             return false;
         }
     }
@@ -719,15 +712,14 @@
             const result = await response.json();
             
             if(result.success) {
-                console.log("Dados salvos com sucesso");
+                console.log("✅ Dados salvos com sucesso");
                 return true;
             } else {
-                alert("Erro ao salvar: " + (result.error || "desconhecido"));
+                console.error("Erro ao salvar:", result.error);
                 return false;
             }
         } catch(e) {
-            console.error("Erro ao salvar:", e);
-            alert("Erro de conexão ao salvar: " + e.message);
+            console.error("Erro de conexão:", e);
             return false;
         }
     }
@@ -920,22 +912,22 @@
         let tableBody = document.getElementById('tableBody');
         if(tableBody) {
             if(ativos.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="8">Nenhuma dívida ativa. </d> </d> ';
+                tableBody.innerHTML = '<tr><td colspan="8">Nenhuma dívida ativa.</td></tr>';
             } else {
                 tableBody.innerHTML = ativos.map(d => {
                     let faltam = d.totalParcelas - d.parcelaAtual + 1;
                     let pendente = faltam * d.valorParcela;
                     let vencimento = calcularVencimento(d.inicio, d.parcelaAtual, d.cartao) || '—';
                     return `<tr>
-                        <td><strong>${d.nome}</strong></d>
-                        <td>${d.cartao}</d>
-                        <td>${d.parcelaAtual}/${d.totalParcelas}</d>
+                        <td><strong>${d.nome}</strong></td>
+                        <td>${d.cartao}</td>
+                        <td>${d.parcelaAtual}/${d.totalParcelas}</td>
                         <td>R$ ${d.valorParcela.toFixed(2)}</d>
                         <td>${faltam}</d>
                         <td>R$ ${pendente.toFixed(2)}</d>
                         <td>${vencimento}</d>
                         <td><button class="btn-sm" onclick="abrirWhats(${d.id})" style="background:#25D366;">📲</button>
-                    </tr>`;
+                    </td>`;
                 }).join('');
             }
         }
@@ -944,21 +936,21 @@
         let quitadasBody = document.getElementById('quitadasTableBody');
         if(quitadasBody) {
             if(quitadas.length === 0) {
-                quitadasBody.innerHTML = '<tr><td colspan="7">Nenhuma dívida quitada.</d> </d> ';
+                quitadasBody.innerHTML = '<tr><td colspan="7">Nenhuma dívida quitada.</td></tr>';
             } else {
                 quitadasBody.innerHTML = quitadas.map(d => {
                     let totalPago = d.totalParcelas * d.valorParcela;
                     let dataQuitacao = d.pagamentos && d.pagamentos.length > 0 ? 
                         formatarDataBR(d.pagamentos[d.pagamentos.length-1].data) : formatarDataBR(d.inicio);
                     return `<tr>
-                        <td><strong>${d.nome}</strong></d>
-                        <td>${d.cartao}</d>
-                        <td>${d.totalParcelas}</d>
+                        <td><strong>${d.nome}</strong></td>
+                        <td>${d.cartao}</td>
+                        <td>${d.totalParcelas}</td>
                         <td>R$ ${d.valorParcela.toFixed(2)}</d>
                         <td>R$ ${totalPago.toFixed(2)}</d>
                         <td>${dataQuitacao}</d>
                         <td>${d.whats || 'não cadastrado'}</d>
-                    </td>`;
+                    </tr>`;
                 }).join('');
             }
         }
@@ -1077,7 +1069,7 @@
             
             alert(`✅ Dívida cadastrada com sucesso!\n📅 Data início: ${formatarDataBR(inicio)}`);
         } else {
-            alert("❌ Erro ao salvar! Verifique sua conexão.");
+            alert("❌ Erro ao salvar! Verifique sua conexão e se a planilha está correta.");
         }
     });
     
@@ -1240,13 +1232,13 @@
         if(senha === SENHA_ADMIN) {
             isAdmin = true;
             currentUser = nome;
-            document.getElementById('currentUserName').innerText = nome;
+            document.getElementById('currentUserName').innerHTML = nome;
             document.getElementById('adminBadge').classList.remove('hidden');
             document.getElementById('adminActions').style.display = 'flex';
         } else {
             isAdmin = false;
             currentUser = nome;
-            document.getElementById('currentUserName').innerText = nome;
+            document.getElementById('currentUserName').innerHTML = nome;
             document.getElementById('adminBadge').classList.add('hidden');
             document.getElementById('adminActions').style.display = 'none';
         }
