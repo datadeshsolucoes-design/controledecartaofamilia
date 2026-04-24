@@ -2,575 +2,350 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Controle do Cartão - Acessível</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle do Cartão - Dívidas</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: system-ui, 'Segoe UI', 'Inter', sans-serif;
-            transition: background 0.3s ease, color 0.2s;
-        }
-
-        :root {
-            --bg: #f1f5f9;
-            --card: #ffffff;
-            --text: #0f172a;
-            --text-light: #475569;
-            --border: #e2e8f0;
-            --primary: #3b82f6;
-            --primary-dark: #2563eb;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --purple: #8b5cf6;
-            --pink: #ec4899;
-            --shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.02);
-        }
-
-        body.dark {
-            --bg: #0f172a;
-            --card: #1e293b;
-            --text: #f1f5f9;
-            --text-light: #94a3b8;
-            --border: #334155;
-        }
-
-        body {
-            background: var(--bg);
-            color: var(--text);
-            padding: 20px;
-            font-size: 18px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        h1 {
-            font-size: 2.2rem;
-            background: linear-gradient(135deg, var(--primary), var(--purple), var(--pink));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        h2 {
-            font-size: 1.6rem;
-            margin-top: 30px;
-            margin-bottom: 15px;
-        }
-
-        h3 {
-            font-size: 1.3rem;
-            margin-bottom: 15px;
-        }
-
-        .controls-bar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            align-items: center;
-            background: var(--card);
-            padding: 18px 24px;
-            border-radius: 28px;
-            margin-bottom: 30px;
-            border: 1px solid var(--border);
-        }
-
-        .filter-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--bg);
-            padding: 8px 16px;
-            border-radius: 48px;
-        }
-
-        .filter-group label {
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        select, input {
-            padding: 10px 16px;
-            border-radius: 40px;
-            border: 1px solid var(--border);
-            background: var(--card);
-            color: var(--text);
-            font-size: 1rem;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-            margin-bottom: 35px;
-        }
-
-        .stat-card {
-            background: var(--card);
-            border-radius: 28px;
-            padding: 24px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-        }
-
-        .stat-card h3 {
-            font-size: 1rem;
-            font-weight: 500;
-            color: var(--text-light);
-            margin-bottom: 10px;
-        }
-
-        .stat-card .value {
-            font-size: 2.2rem;
-            font-weight: 700;
-        }
-
-        .tabs {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 25px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 12px;
-        }
-
-        .tab-btn {
-            background: transparent;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 48px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            color: var(--text-light);
-        }
-
-        .tab-btn.active {
-            background: var(--primary);
-            color: white;
-        }
-
-        .form-panel {
-            background: var(--card);
-            border-radius: 28px;
-            padding: 28px;
-            margin-bottom: 35px;
-            border: 1px solid var(--border);
-            display: none;
-        }
-
-        .form-panel.active {
-            display: block;
-        }
-
-        .form-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-bottom: 24px;
-        }
-
-        .form-group {
-            flex: 1;
-            min-width: 170px;
-        }
-
-        label {
-            font-size: 0.9rem;
-            font-weight: 600;
-            display: block;
-            margin-bottom: 6px;
-            color: var(--text-light);
-        }
-
-        input, select, button {
-            width: 100%;
-            padding: 12px 16px;
-            border-radius: 20px;
-            border: 1px solid var(--border);
-            background: var(--bg);
-            color: var(--text);
-            font-size: 1rem;
-        }
-
-        button {
-            background: var(--primary);
-            color: white;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: var(--primary-dark);
-        }
-
-        .btn-danger { background: var(--danger); }
-        .btn-warning { background: var(--warning); }
-        .btn-sm { padding: 8px 14px; font-size: 0.9rem; width: auto; }
-
-        .loan-card {
-            background: var(--card);
-            border-radius: 24px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-left: 6px solid var(--primary);
-            box-shadow: var(--shadow);
-        }
-
-        .loan-card .loan-header {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            margin-bottom: 12px;
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-
-        .badge {
-            background: var(--bg);
-            padding: 6px 14px;
-            border-radius: 28px;
-            font-size: 0.85rem;
-        }
-
-        .progress-bar {
-            height: 10px;
-            background: var(--border);
-            border-radius: 12px;
-            margin: 15px 0;
-        }
-
-        .progress-fill {
-            background: var(--success);
-            height: 100%;
-            border-radius: 12px;
-        }
-
-        /* Tabelona estilosa */
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: var(--card);
-            border-radius: 24px;
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            font-size: 0.95rem;
-        }
-
-        .data-table th {
-            background: var(--primary);
-            color: white;
-            padding: 14px 12px;
-            text-align: left;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-
-        .data-table td {
-            padding: 12px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .data-table tr:hover {
-            background: var(--bg);
-        }
-
-        .data-table th:hover {
-            background: var(--primary-dark);
-        }
-
-        .table-container {
-            overflow-x: auto;
-            margin-top: 15px;
-        }
-
-        @media (max-width: 700px) {
-            body { padding: 12px; font-size: 16px; }
-            .stat-card .value { font-size: 1.8rem; }
-            h1 { font-size: 1.8rem; }
-            h2 { font-size: 1.4rem; }
-            .data-table th, .data-table td { padding: 10px 8px; font-size: 0.85rem; }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, 'Segoe UI', sans-serif; }
+        body { background: #f1f5f9; padding: 20px; font-size: 18px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 { font-size: 2rem; color: #1e293b; margin-bottom: 20px; }
+        .filtros { display: flex; gap: 15px; flex-wrap: wrap; background: white; padding: 15px; border-radius: 20px; margin-bottom: 20px; align-items: center; }
+        .filtros input, .filtros select { padding: 10px; border-radius: 12px; border: 1px solid #ccc; font-size: 1rem; }
+        .btn-limpar { background: #64748b; }
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 15px; margin-bottom: 25px; }
+        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .card h3 { font-size: 0.9rem; color: #555; }
+        .card .valor { font-size: 1.8rem; font-weight: bold; color: #3b82f6; }
+        button { background: #3b82f6; color: white; border: none; padding: 10px 18px; border-radius: 30px; font-size: 0.9rem; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #2563eb; }
+        table { width: 100%; background: white; border-radius: 20px; border-collapse: collapse; overflow: hidden; margin-top: 20px; }
+        th { background: #3b82f6; color: white; padding: 12px; text-align: left; font-size: 1rem; }
+        td { padding: 10px; border-bottom: 1px solid #e2e8f0; }
+        .divida-card { background: white; border-radius: 16px; padding: 15px; margin-bottom: 12px; border-left: 5px solid #3b82f6; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 25px; border-radius: 24px; width: 90%; max-width: 400px; }
+        .modal-content input, .modal-content textarea { width: 100%; padding: 12px; margin: 10px 0; border-radius: 12px; border: 1px solid #ccc; font-size: 1rem; }
+        .hidden { display: none; }
+        @media (max-width: 700px) { body { padding: 12px; font-size: 16px; } }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="container">
-    <div class="header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; margin-bottom:25px;">
-        <h1>💳 Controle do Cartão</h1>
-        <button class="tab-btn" id="themeToggle" style="background:var(--card); color:var(--text); width:auto;">🌙 Modo escuro</button>
+    <h1>💳 Controle do Cartão - Dívidas</h1>
+
+    <!-- FILTROS -->
+    <div class="filtros">
+        <input type="text" id="filtroNome" placeholder="🔍 Filtrar por nome">
+        <select id="filtroCartao">
+            <option value="all">Ambos cartões</option>
+            <option value="A">Cartão A (dia 10)</option>
+            <option value="B">Cartão B (dia 25)</option>
+        </select>
+        <button id="btnLimparFiltros" class="btn-limpar">🧹 Limpar filtros</button>
     </div>
 
-    <div class="controls-bar">
-        <div class="filter-group"><label>📅 Mês:</label><select id="monthSelector"></select></div>
-        <div class="filter-group"><label>🔍 Nome:</label><input type="text" id="nameFilter" placeholder="Digite o nome"></div>
-        <div class="filter-group"><label>💳 Cartão:</label><select id="cardFilter"><option value="all">Ambos</option><option value="A">Cartão A (dia 10)</option><option value="B">Cartão B (dia 25)</option></select></div>
+    <!-- CARDS RESUMO -->
+    <div class="cards" id="cards"></div>
+
+    <!-- BOTÕES PRINCIPAIS -->
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+        <button id="btnNovo">➕ Nova dívida</button>
+        <button id="btnPagar">💰 Pagar parcela</button>
     </div>
 
-    <div class="stats-grid" id="statsGrid"></div>
-
-    <div class="tabs">
-        <button class="tab-btn active" data-tab="newLoan">➕ Novo empréstimo</button>
-        <button class="tab-btn" data-tab="pay">💰 Pagar parcela</button>
-        <button class="tab-btn" data-tab="edit">✏️ Editar/Excluir</button>
-        <button class="tab-btn" data-tab="undo">⏪ Desfazer</button>
-        <button class="tab-btn" data-tab="backup">💾 Backup/Excel</button>
+    <!-- FORMULÁRIO NOVA DÍVIDA -->
+    <div id="formNovo" style="background:white; padding:20px; border-radius:20px; margin-bottom:20px; display:none;">
+        <h3>➕ Nova dívida no cartão</h3>
+        <input type="text" id="nome" placeholder="Nome da pessoa" style="width:100%; padding:12px; margin:8px 0; border-radius:12px; border:1px solid #ccc;">
+        <input type="text" id="telefone" placeholder="WhatsApp (ex: 11999999999)" style="width:100%; padding:12px; margin:8px 0; border-radius:12px; border:1px solid #ccc;">
+        <input type="number" id="parcelaValor" placeholder="Valor da parcela (R$)" style="width:100%; padding:12px; margin:8px 0; border-radius:12px; border:1px solid #ccc;">
+        <input type="number" id="totalParcelas" placeholder="Total de parcelas" style="width:100%; padding:12px; margin:8px 0; border-radius:12px; border:1px solid #ccc;">
+        <select id="cartao" style="width:100%; padding:12px; margin:8px 0; border-radius:12px;">
+            <option value="A">Cartão A (vence dia 10)</option>
+            <option value="B">Cartão B (vence dia 25)</option>
+        </select>
+        <input type="date" id="dataInicio" style="width:100%; padding:12px; margin:8px 0; border-radius:12px;">
+        <button id="salvarNovo" style="background:#10b981;">✅ Salvar dívida</button>
+        <button id="cancelarNovo" style="background:#94a3b8;">Cancelar</button>
     </div>
 
-    <div id="newLoan" class="form-panel active">
-        <h3>➕ Cadastrar novo empréstimo</h3>
-        <div class="form-row">
-            <div class="form-group"><label>Nome</label><input type="text" id="newName" placeholder="Ex: Ana"></div>
-            <div class="form-group"><label>Valor parcela (R$)</label><input type="number" id="newInstallment" placeholder="250"></div>
-            <div class="form-group"><label>Total parcelas</label><input type="number" id="newTotal" placeholder="10"></div>
-            <div class="form-group"><label>Cartão</label><select id="newCard"><option value="A">Cartão A (vence dia 10)</option><option value="B">Cartão B (vence dia 25)</option></select></div>
-            <div class="form-group"><label>Data início</label><input type="date" id="newDate"></div>
-        </div>
-        <button id="createLoanBtn">✅ Criar empréstimo</button>
-    </div>
-
-    <div id="pay" class="form-panel">
+    <!-- FORMULÁRIO PAGAR PARCELA -->
+    <div id="formPagar" style="background:white; padding:20px; border-radius:20px; margin-bottom:20px; display:none;">
         <h3>💰 Pagar parcela</h3>
-        <div class="form-row">
-            <div class="form-group"><label>Empréstimo</label><select id="payLoanSelect"></select></div>
-            <div class="form-group"><label>Data do pagamento</label><input type="date" id="payDate"></div>
-        </div>
-        <button id="payInstallmentBtn">✅ Confirmar pagamento</button>
+        <select id="selectPagar" style="width:100%; padding:12px; margin:8px 0; border-radius:12px;"></select>
+        <input type="date" id="dataPagamento" style="width:100%; padding:12px; margin:8px 0; border-radius:12px;">
+        <button id="confirmarPagamento" style="background:#10b981;">✅ Confirmar pagamento</button>
+        <button id="cancelarPagar" style="background:#94a3b8;">Cancelar</button>
     </div>
 
-    <div id="edit" class="form-panel">
-        <h3>✏️ Editar/excluir empréstimo</h3>
-        <div class="form-row">
-            <div class="form-group"><label>Empréstimo</label><select id="editLoanSelect"></select></div>
-            <div class="form-group"><label>Valor parcela</label><input type="number" id="editInstallmentValue"></div>
-            <div class="form-group"><label>Total parcelas</label><input type="number" id="editTotalParcels"></div>
-        </div>
-        <div class="form-row"><button id="saveEditBtn">💾 Salvar</button><button id="deleteLoanBtn" class="btn-danger">🗑️ Excluir</button></div>
-    </div>
+    <!-- LISTA DE DÍVIDAS ATIVAS -->
+    <h2>📋 Dívidas ativas no cartão</h2>
+    <div id="listaDividas"></div>
 
-    <div id="undo" class="form-panel">
-        <h3>⏪ Desfazer último pagamento</h3>
-        <div class="form-row"><div class="form-group"><label>Empréstimo</label><select id="undoLoanSelect"></select></div></div>
-        <button id="undoLastPaymentBtn" class="btn-warning">↩️ Desfazer</button>
-    </div>
-
-    <div id="backup" class="form-panel">
-        <h3>💾 Exportar / Importar</h3>
-        <div class="form-row"><button id="exportExcelBtn">📊 Baixar Excel</button><button id="backupBtn">📁 Backup JSON</button><input type="file" id="restoreFile" accept=".json" style="display:none"><button id="restoreBtn">🔄 Restaurar</button></div>
-    </div>
-
-    <h2>📋 Empréstimos ativos</h2>
-    <div id="activeLoansList"></div>
-
-    <h2>✅ Quitados</h2>
-    <div id="paidLoansList"></div>
-
-    <!-- TABELA COMPLETA NO FINAL -->
+    <!-- TABELA COMPLETA -->
     <h2>📊 Tabela completa de todas as dívidas</h2>
-    <div class="table-container">
-        <table class="data-table" id="fullTable">
-            <thead>
-                <tr><th data-sort="name">👤 Nome</th><th data-sort="card">💳 Cartão</th><th data-sort="installment">📦 Parcela</th><th data-sort="value">💰 Valor parcela</th><th data-sort="remaining">🔢 Restantes</th><th data-sort="total">💵 Total pendente</th><th data-sort="due">📅 Próx. vencimento</th><th>📲 Ação</th></tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
+    <table id="tabelaCompleta">
+        <thead><tr><th>Nome</th><th>Cartão</th><th>Parcela</th><th>Valor parcela</th><th>Faltam</th><th>Total pendente</th><th>WhatsApp</th></tr>
+        </thead>
+        <tbody id="tabelaBody"></tbody>
+    </table>
+</div>
+
+<!-- MODAL WHATSAPP -->
+<div id="modalWhats" class="modal hidden">
+    <div class="modal-content">
+        <h3>📲 Enviar cobrança via WhatsApp</h3>
+        <input type="text" id="whatsNumero" placeholder="Número com DDD (ex: 11999999999)">
+        <textarea id="whatsMensagem" rows="4" placeholder="Mensagem personalizada..."></textarea>
+        <button id="btnEnviarWhats" style="background:#25D366;">📲 Enviar WhatsApp</button>
+        <button id="btnFecharWhats">Cancelar</button>
     </div>
 </div>
 
 <script>
-    let loans = [], nextId = 1, currentMonth = new Date().toISOString().slice(0,7);
-    const CARD_DUE = { A: 10, B: 25 };
+    let dividas = []; // mudamos o nome de emprestimos para dividas
+    let whatsCallback = null;
 
-    function calculateDueDate(startDate, installmentIndex, cardType) {
-        if (!startDate) return null;
-        let [year, month, _] = startDate.split('-').map(Number);
-        let dueDay = CARD_DUE[cardType];
-        let dueMonth = month + installmentIndex - 1;
-        let dueYear = year;
-        while (dueMonth > 12) { dueMonth -= 12; dueYear++; }
-        let lastDay = new Date(dueYear, dueMonth, 0).getDate();
-        let finalDay = Math.min(dueDay, lastDay);
-        return `${dueYear}-${String(dueMonth).padStart(2,'0')}-${String(finalDay).padStart(2,'0')}`;
+    // Salvar no localStorage
+    function salvarDados() {
+        localStorage.setItem('dividasCartao', JSON.stringify(dividas));
     }
 
-    function getNextDueDate(loan) {
-        if (loan.status !== 'active') return null;
-        return calculateDueDate(loan.startDate, loan.currentInstallment, loan.card);
+    // Carregar dados (sem exemplos automáticos)
+    function carregarDados() {
+        let dados = localStorage.getItem('dividasCartao');
+        if(dados && dados !== '[]') {
+            dividas = JSON.parse(dados);
+        } else {
+            dividas = []; // começa vazio, sem exemplos
+        }
     }
 
-    function saveToLocal() { localStorage.setItem('cartao_loans_v3', JSON.stringify(loans)); localStorage.setItem('cartao_nextId_v3', nextId); }
-    function loadFromLocal() {
-        const stored = localStorage.getItem('cartao_loans_v3');
-        const storedId = localStorage.getItem('cartao_nextId_v3');
-        if(stored) loans = JSON.parse(stored);
-        if(storedId) nextId = parseInt(storedId);
-        if(!loans.length) initSample();
-    }
-    function initSample() {
-        loans = [
-            { id: nextId++, name: "Ana", installmentValue: 275, totalInstallments: 10, currentInstallment: 3, status: "active", startDate: "2025-03-05", card: "A", payments: [{date:"2025-04-05", installmentPaid:1},{date:"2025-05-05", installmentPaid:2}] },
-            { id: nextId++, name: "Ana", installmentValue: 350, totalInstallments: 8, currentInstallment: 5, status: "active", startDate: "2025-02-10", card: "B", payments: [{date:"2025-03-25", installmentPaid:1},{date:"2025-04-25", installmentPaid:2},{date:"2025-05-25", installmentPaid:3},{date:"2025-06-25", installmentPaid:4}] },
-            { id: nextId++, name: "João", installmentValue: 500, totalInstallments: 6, currentInstallment: 2, status: "active", startDate: "2025-06-01", card: "A", payments: [{date:"2025-07-10", installmentPaid:1}] }
-        ];
-        saveToLocal();
+    // Formatar data brasileira
+    function formatarDataBrasil(dataISO) {
+        if(!dataISO) return '';
+        let partes = dataISO.split('-');
+        if(partes.length !== 3) return dataISO;
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
     }
 
-    function updateUI() { renderMonthSelector(); renderStats(); renderLoans(); renderFullTable(); populateSelects(); }
-    
-    function renderMonthSelector() {
-        let sel = document.getElementById('monthSelector');
-        let opts = '';
-        for(let y=2025; y<=2026; y++) for(let m=1; m<=12; m++) { let val = `${y}-${String(m).padStart(2,'0')}`; opts += `<option value="${val}" ${val===currentMonth ? 'selected' : ''}>${y}/${m}</option>`; }
-        sel.innerHTML = opts;
-        sel.onchange = (e) => { currentMonth = e.target.value; updateUI(); };
+    // Calcular próxima data de vencimento
+    function calcularVencimento(inicio, parcelaAtual, cartao) {
+        if(!inicio) return 'não definida';
+        let [ano, mes, dia] = inicio.split('-').map(Number);
+        let diaVenc = cartao === 'A' ? 10 : 25;
+        let mesVenc = mes + (parcelaAtual - 1);
+        let anoVenc = ano;
+        while(mesVenc > 12) { mesVenc -= 12; anoVenc++; }
+        return `${String(diaVenc).padStart(2,'0')}/${String(mesVenc).padStart(2,'0')}/${anoVenc}`;
     }
 
-    function getFilteredLoans() {
-        let filtered = loans.filter(l => l.status === 'active');
-        let name = document.getElementById('nameFilter').value.toLowerCase();
-        let card = document.getElementById('cardFilter').value;
-        if(name) filtered = filtered.filter(l => l.name.toLowerCase().includes(name));
-        if(card !== 'all') filtered = filtered.filter(l => l.card === card);
-        return filtered;
-    }
-
-    function getPaymentsInMonth(month) { let total = 0; loans.forEach(l => l.payments?.forEach(p => { if(p.date.startsWith(month)) total += l.installmentValue; })); return total; }
-    function getDueInMonth(month) { let total = 0; loans.forEach(l => { if(l.status!=='active') return; for(let i=l.currentInstallment; i<=l.totalInstallments; i++) { let due = calculateDueDate(l.startDate, i, l.card); if(due && due.startsWith(month)) total += l.installmentValue; } }); return total; }
-
-    function renderStats() {
-        let active = loans.filter(l => l.status === 'active');
-        let totalDebt = active.reduce((acc, l) => acc + (l.totalInstallments - l.currentInstallment + 1) * l.installmentValue, 0);
-        let paidThisMonth = getPaymentsInMonth(currentMonth);
-        let dueThisMonth = getDueInMonth(currentMonth);
-        let [year, month] = currentMonth.split('-');
-        let nextMonth = parseInt(month)+1, nextYear = parseInt(year);
-        if(nextMonth > 12) { nextMonth = 1; nextYear++; }
-        let nextMonthStr = `${nextYear}-${String(nextMonth).padStart(2,'0')}`;
-        let dueNextMonth = getDueInMonth(nextMonthStr);
-        document.getElementById('statsGrid').innerHTML = `
-            <div class="stat-card"><h3>💰 Dívida total cartão</h3><div class="value">R$ ${totalDebt.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
-            <div class="stat-card"><h3>📆 A pagar em ${currentMonth}</h3><div class="value">R$ ${dueThisMonth.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
-            <div class="stat-card"><h3>✅ Pago em ${currentMonth}</h3><div class="value">R$ ${paidThisMonth.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
-            <div class="stat-card"><h3>🔮 Previsão próximo mês</h3><div class="value">R$ ${dueNextMonth.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
+    // Atualizar toda a tela
+    function atualizarTela() {
+        let nomeFiltro = document.getElementById('filtroNome').value.toLowerCase();
+        let cartaoFiltro = document.getElementById('filtroCartao').value;
+        
+        let ativos = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
+        
+        if(nomeFiltro) ativos = ativos.filter(d => d.nome.toLowerCase().includes(nomeFiltro));
+        if(cartaoFiltro !== 'all') ativos = ativos.filter(d => d.cartao === cartaoFiltro);
+        
+        // Cards
+        let totalDivida = ativos.reduce((s, d) => s + (d.totalParcelas - d.parcelaAtual + 1) * d.valorParcela, 0);
+        document.getElementById('cards').innerHTML = `
+            <div class="card"><h3>💰 Dívida total no cartão</h3><div class="valor">R$ ${totalDivida.toFixed(2)}</div></div>
+            <div class="card"><h3>📦 Dívidas ativas</h3><div class="valor">${ativos.length}</div></div>
         `;
+        
+        // Lista de dívidas (cards)
+        let html = '';
+        for(let d of ativos) {
+            let faltam = d.totalParcelas - d.parcelaAtual + 1;
+            let pendente = faltam * d.valorParcela;
+            let vencimento = calcularVencimento(d.inicio, d.parcelaAtual, d.cartao);
+            html += `
+                <div class="divida-card">
+                    <strong>${d.nome}</strong> (Cartão ${d.cartao} - vence dia ${d.cartao === 'A' ? '10' : '25'})<br>
+                    📆 ${d.parcelaAtual}/${d.totalParcelas} parcelas - R$ ${d.valorParcela.toFixed(2)}/mês<br>
+                    🔜 Próximo vencimento: ${vencimento}<br>
+                    💵 Faltam ${faltam}x = R$ ${pendente.toFixed(2)}<br>
+                    📞 Telefone: ${d.telefone || 'não cadastrado'}<br>
+                    <button onclick="abrirWhats(${d.id})">📲 Cobrar WhatsApp</button>
+                    <button onclick="pagarParcela(${d.id})">💰 Pagar parcela</button>
+                    <button onclick="excluirDivida(${d.id})" style="background:#ef4444;">🗑️ Excluir</button>
+                </div>
+            `;
+        }
+        document.getElementById('listaDividas').innerHTML = html || '<p>Nenhuma dívida ativa.</p>';
+        
+        // Tabelona
+        let tabelaHtml = '';
+        for(let d of ativos) {
+            let faltam = d.totalParcelas - d.parcelaAtual + 1;
+            let pendente = faltam * d.valorParcela;
+            tabelaHtml += `
+                <tr>
+                    <td><strong>${d.nome}</strong></td>
+                    <td>${d.cartao}</td>
+                    <td>${d.parcelaAtual}/${d.totalParcelas}</td>
+                    <td>R$ ${d.valorParcela.toFixed(2)}</td>
+                    <td>${faltam}</td>
+                    <td>R$ ${pendente.toFixed(2)}</td>
+                    <td><button onclick="abrirWhats(${d.id})" style="background:#25D366; padding:6px 12px;">📲 WhatsApp</button></td>
+                </tr>
+            `;
+        }
+        document.getElementById('tabelaBody').innerHTML = tabelaHtml;
+        
+        // Atualizar select de pagamento
+        let select = document.getElementById('selectPagar');
+        select.innerHTML = ativos.map(d => `<option value="${d.id}">${d.nome} - ${d.parcelaAtual}/${d.totalParcelas} - R$ ${d.valorParcela}</option>`).join('');
     }
 
-    function renderLoans() {
-        let filtered = getFilteredLoans();
-        let activeDiv = document.getElementById('activeLoansList');
-        let paidDiv = document.getElementById('paidLoansList');
-        activeDiv.innerHTML = filtered.map(loan => {
-            let nextDue = getNextDueDate(loan);
-            let falta = loan.totalInstallments - loan.currentInstallment + 1;
-            let totalPendente = falta * loan.installmentValue;
-            let percent = ((loan.currentInstallment-1)/loan.totalInstallments)*100;
-            return `<div class="loan-card"><div class="loan-header"><span>${loan.name} (Cartão ${loan.card} - vence dia ${CARD_DUE[loan.card]})</span><span class="badge">${loan.currentInstallment}/${loan.totalInstallments}</span></div><div>💰 R$ ${loan.installmentValue.toFixed(2)} / parcela</div><div>📅 Início: ${loan.startDate} | ${nextDue ? `🔜 Próx. venc: ${nextDue}` : '✅ Em dia'}</div><div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div><div><strong>Faltam: ${falta}x R$ ${loan.installmentValue.toFixed(2)} = R$ ${totalPendente.toFixed(2)}</strong></div><div class="actions" style="display:flex; gap:8px; margin-top:10px;"><button class="btn-sm" onclick="sendWhatsApp(${loan.id})">📲 Cobrar WhatsApp</button></div><div class="history-log" style="font-size:0.8rem; margin-top:8px;">📆 Pagamentos: ${loan.payments?.map(p=>`${p.installmentPaid}ª em ${p.date}`).join(', ') || 'nenhum'}</div></div>`;
-        }).join('');
-        paidDiv.innerHTML = loans.filter(l => l.status === 'paid').map(loan => `<div class="loan-card" style="border-left-color:var(--success); opacity:0.8"><div><strong>${loan.name}</strong> (QUITADO) - Cartão ${loan.card} - ${loan.totalInstallments}x R$ ${loan.installmentValue}</div><div>Início: ${loan.startDate} | Fim: ${loan.payments[loan.payments.length-1]?.date || '—'}</div></div>`).join('');
-    }
-
-    function renderFullTable() {
-        let active = loans.filter(l => l.status === 'active');
-        let nameFilter = document.getElementById('nameFilter').value.toLowerCase();
-        let cardFilter = document.getElementById('cardFilter').value;
-        if(nameFilter) active = active.filter(l => l.name.toLowerCase().includes(nameFilter));
-        if(cardFilter !== 'all') active = active.filter(l => l.card === cardFilter);
-        let tbody = document.getElementById('tableBody');
-        tbody.innerHTML = active.map(loan => {
-            let falta = loan.totalInstallments - loan.currentInstallment + 1;
-            let totalPendente = falta * loan.installmentValue;
-            let nextDue = getNextDueDate(loan) || '—';
-            return `<tr><td><strong>${loan.name}</strong></td><td>${loan.card} (dia ${CARD_DUE[loan.card]})</td><td>${loan.currentInstallment}/${loan.totalInstallments}</td><td>R$ ${loan.installmentValue.toFixed(2)}</td><td>${falta}</td><td>R$ ${totalPendente.toFixed(2)}</td><td>${nextDue}</td><td><button class="btn-sm" onclick="sendWhatsApp(${loan.id})" style="background:var(--success);">📲 WhatsApp</button></td></tr>`;
-        }).join('');
-    }
-
-    function populateSelects() {
-        let active = loans.filter(l => l.status === 'active');
-        let opt = active.map(l => `<option value="${l.id}">${l.name} - ${l.currentInstallment}/${l.totalInstallments} - R$ ${l.installmentValue}</option>`).join('');
-        document.getElementById('payLoanSelect').innerHTML = opt;
-        document.getElementById('editLoanSelect').innerHTML = opt;
-        document.getElementById('undoLoanSelect').innerHTML = opt;
-        let selected = loans.find(l => l.id == document.getElementById('editLoanSelect').value);
-        if(selected) { document.getElementById('editInstallmentValue').value = selected.installmentValue; document.getElementById('editTotalParcels').value = selected.totalInstallments; }
-    }
-
-    window.sendWhatsApp = function(loanId) {
-        let loan = loans.find(l => l.id === loanId);
-        if(!loan) return;
-        let falta = loan.totalInstallments - loan.currentInstallment + 1;
-        let total = falta * loan.installmentValue;
-        let due = getNextDueDate(loan) || 'em breve';
-        let msg = `Olá ${loan.name}, você tem ${falta} parcelas de R$ ${loan.installmentValue.toFixed(2)} restantes (total R$ ${total.toFixed(2)}). Próximo vencimento: ${due}.`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    // Pagar parcela
+    window.pagarParcela = function(id) {
+        let divida = dividas.find(d => d.id === id);
+        if(divida && divida.parcelaAtual <= divida.totalParcelas) {
+            divida.parcelaAtual++;
+            if(!divida.pagamentos) divida.pagamentos = [];
+            let hoje = new Date().toISOString().slice(0,10);
+            divida.pagamentos.push({ data: hoje, parcela: divida.parcelaAtual-1 });
+            salvarDados();
+            atualizarTela();
+            alert(`✅ Parcela ${divida.parcelaAtual-1} paga com sucesso!`);
+        }
     };
-
-    document.getElementById('createLoanBtn').onclick = () => {
-        let name = document.getElementById('newName').value.trim();
-        let val = parseFloat(document.getElementById('newInstallment').value);
-        let total = parseInt(document.getElementById('newTotal').value);
-        let card = document.getElementById('newCard').value;
-        let start = document.getElementById('newDate').value;
-        if(!name || isNaN(val) || isNaN(total) || val<=0 || total<=0) { alert("Preencha todos"); return; }
-        if(!start) start = new Date().toISOString().split('T')[0];
-        loans.push({ id: nextId++, name, installmentValue: val, totalInstallments: total, currentInstallment: 1, status: 'active', startDate: start, card, payments: [] });
-        saveToLocal(); updateUI();
-        document.getElementById('newName').value = ''; document.getElementById('newInstallment').value = ''; document.getElementById('newTotal').value = '';
-        alert("Empréstimo criado!");
+    
+    // Excluir dívida
+    window.excluirDivida = function(id) {
+        if(confirm("Tem certeza que quer excluir esta dívida permanentemente?")) {
+            dividas = dividas.filter(d => d.id !== id);
+            salvarDados();
+            atualizarTela();
+        }
     };
-    document.getElementById('payInstallmentBtn').onclick = () => {
-        let loanId = parseInt(document.getElementById('payLoanSelect').value);
-        let payDate = document.getElementById('payDate').value;
-        if(!payDate) { alert("Data obrigatória"); return; }
-        let loan = loans.find(l => l.id === loanId);
-        if(!loan || loan.status !== 'active') return;
-        if(loan.currentInstallment > loan.totalInstallments) { alert("Já quitado"); return; }
-        loan.payments.push({ date: payDate, installmentPaid: loan.currentInstallment });
-        loan.currentInstallment++;
-        if(loan.currentInstallment > loan.totalInstallments) loan.status = 'paid';
-        saveToLocal(); updateUI();
-        alert("Pagamento registrado!"); document.getElementById('payDate').value = '';
+    
+    // Abrir modal WhatsApp com dados da dívida
+    window.abrirWhats = function(id) {
+        let divida = dividas.find(d => d.id === id);
+        if(!divida) return;
+        
+        let faltam = divida.totalParcelas - divida.parcelaAtual + 1;
+        let totalPendente = faltam * divida.valorParcela;
+        let vencimento = calcularVencimento(divida.inicio, divida.parcelaAtual, divida.cartao);
+        
+        let mensagemPadrao = `Olá ${divida.nome}! 🏦\n\n`
+            + `Situação da sua dívida no cartão:\n`
+            + `📌 Parcela: ${divida.parcelaAtual}/${divida.totalParcelas}\n`
+            + `💰 Valor da parcela: R$ ${divida.valorParcela.toFixed(2)}\n`
+            + `📅 Próximo vencimento: ${vencimento}\n`
+            + `💵 Total pendente: R$ ${totalPendente.toFixed(2)}\n\n`
+            + `Qualquer dúvida, entre em contato!`;
+        
+        document.getElementById('whatsNumero').value = divida.telefone || '';
+        document.getElementById('whatsMensagem').value = mensagemPadrao;
+        document.getElementById('modalWhats').classList.remove('hidden');
+        
+        whatsCallback = () => {
+            let numero = document.getElementById('whatsNumero').value.replace(/\D/g, '');
+            let mensagem = encodeURIComponent(document.getElementById('whatsMensagem').value);
+            if(numero) {
+                window.open(`https://wa.me/55${numero}?text=${mensagem}`, '_blank');
+            } else {
+                alert("Por favor, informe o número do WhatsApp");
+            }
+            document.getElementById('modalWhats').classList.add('hidden');
+        };
     };
-    document.getElementById('undoLastPaymentBtn').onclick = () => {
-        let loanId = parseInt(document.getElementById('undoLoanSelect').value);
-        let loan = loans.find(l => l.id === loanId);
-        if(!loan || loan.status !== 'active') { alert("Apenas ativos"); return; }
-        if(!loan.payments.length) { alert("Sem pagamentos"); return; }
-        loan.payments.pop();
-        loan.currentInstallment--;
-        if(loan.currentInstallment < 1) loan.currentInstallment = 1;
-        saveToLocal(); updateUI(); alert("Desfeito!");
+    
+    // Eventos dos botões do modal
+    document.getElementById('btnEnviarWhats').onclick = () => { if(whatsCallback) whatsCallback(); };
+    document.getElementById('btnFecharWhats').onclick = () => { document.getElementById('modalWhats').classList.add('hidden'); };
+    
+    // Eventos do formulário
+    document.getElementById('btnNovo').onclick = () => { 
+        document.getElementById('formNovo').style.display = 'block'; 
+        document.getElementById('formPagar').style.display = 'none'; 
     };
-    document.getElementById('saveEditBtn').onclick = () => {
-        let loanId = parseInt(document.getElementById('editLoanSelect').value);
-        let loan = loans.find(l => l.id === loanId);
-        if(!loan) return;
-        let newVal = parseFloat(document.getElementById('editInstallmentValue').value);
-        let newTotal = parseInt(document.getElementById('editTotalParcels').value);
-        if(isNaN(newVal) || isNaN(newTotal)) return;
-        loan.installmentValue = newVal;
-        if(newTotal < loan.currentInstallment) loan.currentInstallment = newTotal;
-        loan.totalInstallments = newTotal;
-        if(loan.currentInstallment > loan.totalInstallments) loan.status = 'paid';
-        saveToLocal(); updateUI(); alert("Editado");
+    document.getElementById('btnPagar').onclick = () => { 
+        document.getElementById('formPagar').style.display = 'block'; 
+        document.getElementById('formNovo').style.display = 'none'; 
     };
-    document.getElementById('deleteLoanBtn').onclick = () => { if(confirm("Excluir?")) { let id = parseInt(document.getElementById('editLoanSelect').value); loans = loans.filter(l => l.id !== id); saveToLocal(); updateUI(); } };
-    document.getElementById('exportExcelBtn').onclick = () => { let ws = XLSX.utils.json_to_sheet(loans.map(l => ({ Nome: l.name, Parcela: l.installmentValue, Total: l.totalInstallments, Atual: l.currentInstallment, Status: l.status, Cartão: l.card }))); let wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Dados"); XLSX.writeFile(wb, `cartao_${new Date().toISOString().slice(0,10)}.xlsx`); };
-    document.getElementById('backupBtn').onclick = () => { let a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify({loans,nextId})], {type:'application/json'})); a.download = 'backup_cartao.json'; a.click(); };
-    document.getElementById('restoreBtn').onclick = () => document.getElementById('restoreFile').click();
-    document.getElementById('restoreFile').onchange = (e) => { let file = e.target.files[0]; if(!file) return; let reader = new FileReader(); reader.onload = ev => { try { let data = JSON.parse(ev.target.result); loans = data.loans; nextId = data.nextId; saveToLocal(); updateUI(); alert("Restaurado!"); } catch(e) { alert("Erro"); } }; reader.readAsText(file); };
-    document.getElementById('themeToggle').onclick = () => { document.body.classList.toggle('dark'); document.getElementById('themeToggle').innerText = document.body.classList.contains('dark') ? '☀️ Claro' : '🌙 Escuro'; };
-    document.querySelectorAll('.tab-btn[data-tab]').forEach(btn => { btn.onclick = () => { document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); document.querySelectorAll('.form-panel').forEach(p=>p.classList.remove('active')); document.getElementById(btn.getAttribute('data-tab')).classList.add('active'); }; });
-    document.getElementById('nameFilter').addEventListener('input', () => { renderLoans(); renderFullTable(); });
-    document.getElementById('cardFilter').addEventListener('change', () => { renderLoans(); renderFullTable(); });
-    loadFromLocal(); updateUI();
+    document.getElementById('cancelarNovo').onclick = () => { document.getElementById('formNovo').style.display = 'none'; };
+    document.getElementById('cancelarPagar').onclick = () => { document.getElementById('formPagar').style.display = 'none'; };
+    
+    document.getElementById('salvarNovo').onclick = () => {
+        let nome = document.getElementById('nome').value.trim();
+        let telefone = document.getElementById('telefone').value.trim();
+        let valor = parseFloat(document.getElementById('parcelaValor').value);
+        let total = parseInt(document.getElementById('totalParcelas').value);
+        let cartao = document.getElementById('cartao').value;
+        let inicio = document.getElementById('dataInicio').value;
+        
+        if(!nome || isNaN(valor) || isNaN(total) || valor<=0 || total<=0) { 
+            alert("Preencha todos os campos corretamente"); 
+            return; 
+        }
+        if(!inicio) inicio = new Date().toISOString().slice(0,10);
+        
+        let novaDivida = {
+            id: Date.now(),
+            nome: nome,
+            telefone: telefone,
+            valorParcela: valor,
+            totalParcelas: total,
+            parcelaAtual: 1,
+            cartao: cartao,
+            inicio: inicio,
+            pagamentos: []
+        };
+        
+        dividas.push(novaDivida);
+        salvarDados();
+        atualizarTela();
+        
+        // Limpar formulário
+        document.getElementById('nome').value = '';
+        document.getElementById('telefone').value = '';
+        document.getElementById('parcelaValor').value = '';
+        document.getElementById('totalParcelas').value = '';
+        document.getElementById('dataInicio').value = '';
+        document.getElementById('formNovo').style.display = 'none';
+        alert("✅ Dívida cadastrada com sucesso!");
+    };
+    
+    document.getElementById('confirmarPagamento').onclick = () => {
+        let id = parseInt(document.getElementById('selectPagar').value);
+        let divida = dividas.find(d => d.id === id);
+        if(divida && divida.parcelaAtual <= divida.totalParcelas) {
+            divida.parcelaAtual++;
+            if(!divida.pagamentos) divida.pagamentos = [];
+            let dataPag = document.getElementById('dataPagamento').value || new Date().toISOString().slice(0,10);
+            divida.pagamentos.push({ data: dataPag, parcela: divida.parcelaAtual-1 });
+            salvarDados();
+            atualizarTela();
+            alert("✅ Pagamento registrado!");
+            document.getElementById('formPagar').style.display = 'none';
+            document.getElementById('dataPagamento').value = '';
+        } else { 
+            alert("Erro ao registrar pagamento"); 
+        }
+    };
+    
+    // Limpar filtros
+    document.getElementById('btnLimparFiltros').onclick = () => {
+        document.getElementById('filtroNome').value = '';
+        document.getElementById('filtroCartao').value = 'all';
+        atualizarTela();
+    };
+    
+    // Eventos de filtro
+    document.getElementById('filtroNome').addEventListener('input', () => atualizarTela());
+    document.getElementById('filtroCartao').addEventListener('change', () => atualizarTela());
+    
+    // Inicialização
+    carregarDados();
+    atualizarTela();
 </script>
 </body>
 </html>
