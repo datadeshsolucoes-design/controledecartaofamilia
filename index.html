@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Controle do Cartão - Dashboard</title>
-    <!-- Chart.js CDN para os gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
@@ -52,7 +51,6 @@
             margin: 0 auto;
         }
 
-        /* HEADER COM BOTÃO DE TEMA NO CANTO DIREITO */
         .header {
             display: flex;
             justify-content: space-between;
@@ -81,7 +79,6 @@
             font-size: 0.9rem;
         }
 
-        /* FILTROS */
         .controls-bar {
             display: flex;
             flex-wrap: wrap;
@@ -95,7 +92,6 @@
             position: relative;
         }
         
-        /* Identificação da caixa de filtros */
         .filters-identifier {
             position: absolute;
             top: -12px;
@@ -133,7 +129,6 @@
             font-size: 0.9rem;
         }
 
-        /* CARDS */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -161,7 +156,6 @@
             font-weight: 700;
         }
 
-        /* BOTÕES DE AÇÃO */
         .action-buttons {
             display: flex;
             flex-wrap: wrap;
@@ -192,7 +186,6 @@
             color: white;
         }
 
-        /* FORMULÁRIOS */
         .form-panel {
             background: var(--card);
             border-radius: 24px;
@@ -226,6 +219,13 @@
             color: var(--text-light);
         }
 
+        .label-opcional {
+            font-size: 0.7rem;
+            color: var(--warning);
+            font-weight: normal;
+            margin-left: 5px;
+        }
+
         input, select, button {
             width: 100%;
             padding: 10px 14px;
@@ -252,7 +252,6 @@
         .btn-warning { background: var(--warning); }
         .btn-sm { padding: 6px 12px; font-size: 0.8rem; width: auto; }
 
-        /* ABAS - Estilo igual aos botões de ação */
         .tabs-container {
             display: flex;
             flex-wrap: wrap;
@@ -283,7 +282,6 @@
             border-color: var(--primary);
         }
 
-        /* Gráfico */
         .chart-container {
             background: var(--card);
             border-radius: 24px;
@@ -294,7 +292,6 @@
         }
         canvas { max-height: 400px; width: 100%; }
 
-        /* CARDS DE DÍVIDA */
         .divida-card {
             background: var(--card);
             border-radius: 20px;
@@ -333,7 +330,6 @@
             border-radius: 10px;
         }
 
-        /* TABELA */
         .data-table {
             width: 100%;
             border-collapse: collapse;
@@ -360,7 +356,6 @@
             overflow-x: auto;
         }
 
-        /* MODAL */
         .modal {
             position: fixed;
             top: 0;
@@ -395,13 +390,11 @@
 </head>
 <body>
 <div class="container">
-    <!-- CABEÇALHO COM BOTÃO DE TEMA -->
     <div class="header">
         <h1>💳 Controle do Cartão</h1>
         <button class="theme-toggle" id="themeToggle">🌙 Modo escuro</button>
     </div>
 
-    <!-- FILTROS COM IDENTIFICAÇÃO -->
     <div class="controls-bar">
         <div class="filters-identifier">🔍 ÁREA DE FILTROS</div>
         <div class="filter-group"><label>📅 Mês referência:</label><input type="month" id="mesReferencia"></div>
@@ -409,10 +402,8 @@
         <button id="btnLimparFiltros" style="background:var(--text-light); width:auto;">🧹 Limpar</button>
     </div>
 
-    <!-- CARDS RESUMO -->
     <div class="stats-grid" id="statsGrid"></div>
 
-    <!-- BOTÕES DE AÇÃO -->
     <div class="action-buttons">
         <button class="action-btn active" data-acao="newLoan">➕ Nova dívida</button>
         <button class="action-btn" data-acao="pay">💰 Pagar parcela</button>
@@ -420,12 +411,11 @@
         <button class="action-btn" data-acao="backup">💾 Backup/Excel</button>
     </div>
 
-    <!-- FORMULÁRIO NOVA DÍVIDA -->
     <div id="form-newLoan" class="form-panel active">
         <h3>➕ Cadastrar nova dívida no cartão</h3>
         <div class="form-row">
             <div class="form-group"><label>Nome completo *</label><input type="text" id="newName" placeholder="Ex: Ana"></div>
-            <div class="form-group"><label>WhatsApp (com DDD)</label><input type="text" id="newWhats" placeholder="11999999999"></div>
+            <div class="form-group"><label>WhatsApp <span class="label-opcional">(opcional)</span></label><input type="text" id="newWhats" placeholder="11999999999"></div>
             <div class="form-group"><label>Valor da parcela (R$) *</label><input type="number" id="newInstallment" placeholder="275"></div>
             <div class="form-group"><label>Total de parcelas *</label><input type="number" id="newTotal" placeholder="10"></div>
         </div>
@@ -437,7 +427,6 @@
         <button id="createLoanBtn">✅ Criar dívida</button>
     </div>
 
-    <!-- FORMULÁRIO PAGAR PARCELA COM SENHA -->
     <div id="form-pay" class="form-panel">
         <h3>💰 Pagar parcela</h3>
         <div class="form-row">
@@ -450,7 +439,6 @@
         <button id="payInstallmentBtn">✅ Confirmar pagamento</button>
     </div>
 
-    <!-- FORMULÁRIO EDITAR/EXCLUIR -->
     <div id="form-edit" class="form-panel">
         <h3>✏️ Editar ou excluir dívida</h3>
         <div class="form-row">
@@ -467,7 +455,6 @@
         </div>
     </div>
 
-    <!-- FORMULÁRIO BACKUP -->
     <div id="form-backup" class="form-panel">
         <h3>💾 Exportar / Importar dados</h3>
         <div class="form-row">
@@ -478,41 +465,49 @@
         </div>
     </div>
 
-    <!-- ABAS - Estilo igual aos botões de ação -->
+    <!-- ABAS: Cartão A, Cartão B, Todos, Quitadas, Gráficos -->
     <div class="tabs-container">
-        <button class="filter-tab active" data-filtro="A">💳 Cartão A (dia 10)</button>
-        <button class="filter-tab" data-filtro="B">💳 Cartão B (dia 25)</button>
+        <button class="filter-tab active" data-filtro="A">💳 Cartão A</button>
+        <button class="filter-tab" data-filtro="B">💳 Cartão B</button>
         <button class="filter-tab" data-filtro="all">📋 Todos os cartões</button>
-        <button class="filter-tab" data-filtro="graficos">📈 Gráficos Evolução</button>
+        <button class="filter-tab" data-filtro="quitadas">✅ Dívidas Quitadas</button>
+        <button class="filter-tab" data-filtro="graficos">📈 Gráficos</button>
     </div>
 
-    <!-- Container de Gráficos (inicialmente oculto) -->
     <div id="graficosContainer" style="display: none;">
         <div class="chart-container">
             <canvas id="evolucaoChart"></canvas>
         </div>
     </div>
 
-    <!-- LISTA DE DÍVIDAS ATIVAS -->
     <div id="conteudoListas">
-        <h2>📋 Dívidas ativas</h2>
-        <div id="activeLoansList"></div>
+        <div id="divActiveLoans">
+            <h2>📋 Dívidas ativas</h2>
+            <div id="activeLoansList"></div>
+        </div>
 
-        <h2>✅ Histórico (Quitadas)</h2>
-        <div id="paidLoansList"></div>
+        <div id="divQuitadasLista" style="display: none;">
+            <h2>✅ Histórico de Dívidas Quitadas</h2>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead><tr><th>Nome</th><th>Cartão</th><th>Total Parcelas</th><th>Valor Parcela</th><th>Valor Total</th><th>Data Quitação</th><th>WhatsApp</th></tr></thead>
+                    <tbody id="quitadasTableBody"></tbody>
+                </table>
+            </div>
+        </div>
 
-        <!-- TABELA COMPLETA -->
-        <h2>📊 Tabela completa de todas as dívidas</h2>
-        <div class="table-container">
-            <table class="data-table">
-                <thead><tr><th>Nome</th><th>Cartão</th><th>Parcela</th><th>Valor parcela</th><th>Restantes</th><th>Total pendente</th><th>WhatsApp</th></tr></thead>
-                <tbody id="tableBody"></tbody>
-            </table>
+        <div id="divTabelaGeral">
+            <h2>📊 Tabela completa de dívidas ativas</h2>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead><tr><th>Nome</th><th>Cartão</th><th>Parcela</th><th>Valor parcela</th><th>Restantes</th><th>Total pendente</th><th>Vencimento</th><th>WhatsApp</th></tr></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- MODAL WHATSAPP -->
 <div id="modalWhats" class="modal hidden">
     <div class="modal-content">
         <h3>📲 Enviar cobrança via WhatsApp</h3>
@@ -531,6 +526,18 @@
     let abaFiltroAtual = "A";
     let chartInstance = null;
     const CARD_DUE = { A: 10, B: 25 };
+
+    function formatarDataBR(dataISO) {
+        if(!dataISO) return '';
+        let partes = dataISO.split('-');
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+
+    function formatarDataISO(dataBR) {
+        if(!dataBR) return '';
+        let partes = dataBR.split('/');
+        return `${partes[2]}-${partes[1]}-${partes[0]}`;
+    }
 
     function calcularVencimento(inicio, parcelaAtual, cartao) {
         if(!inicio) return null;
@@ -554,28 +561,20 @@
         if(!dividas.length) dividas = [];
     }
 
-    function getFiltered() {
+    function getFilteredAtivos() {
         let ativos = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
         let nome = document.getElementById('filtroNome').value.toLowerCase();
         if(nome) ativos = ativos.filter(d => d.nome.toLowerCase().includes(nome));
-        if(abaFiltroAtual !== 'all' && abaFiltroAtual !== 'graficos') ativos = ativos.filter(d => d.cartao === abaFiltroAtual);
+        if(abaFiltroAtual === 'A' || abaFiltroAtual === 'B') ativos = ativos.filter(d => d.cartao === abaFiltroAtual);
         return ativos;
     }
     
-    function getQuitadasFiltradas() {
+    function getQuitadas() {
         let quitadas = dividas.filter(d => d.parcelaAtual > d.totalParcelas);
         let nome = document.getElementById('filtroNome').value.toLowerCase();
         if(nome) quitadas = quitadas.filter(d => d.nome.toLowerCase().includes(nome));
-        if(abaFiltroAtual !== 'all' && abaFiltroAtual !== 'graficos') quitadas = quitadas.filter(d => d.cartao === abaFiltroAtual);
+        if(abaFiltroAtual === 'A' || abaFiltroAtual === 'B') quitadas = quitadas.filter(d => d.cartao === abaFiltroAtual);
         return quitadas;
-    }
-
-    function getAtivosParaTabela() {
-        let ativos = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
-        let nome = document.getElementById('filtroNome').value.toLowerCase();
-        if(nome) ativos = ativos.filter(d => d.nome.toLowerCase().includes(nome));
-        if(abaFiltroAtual !== 'all' && abaFiltroAtual !== 'graficos') ativos = ativos.filter(d => d.cartao === abaFiltroAtual);
-        return ativos;
     }
 
     function getPaymentsInMonth(month) {
@@ -591,9 +590,10 @@
         dividas.forEach(d => {
             if(d.parcelaAtual > d.totalParcelas) return;
             for(let i = d.parcelaAtual; i <= d.totalParcelas; i++) {
-                let [dia, mes, ano] = calcularVencimento(d.inicio, i, d.cartao)?.split('/') || [];
-                if(mes && ano) {
-                    let dueStr = `${ano}-${mes.padStart(2,'0')}`;
+                let venc = calcularVencimento(d.inicio, i, d.cartao);
+                if(venc) {
+                    let [dia, mes, ano] = venc.split('/');
+                    let dueStr = `${ano}-${mes}`;
                     if(dueStr === month) total += d.valorParcela;
                 }
             }
@@ -611,7 +611,7 @@
             let mesStr = `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}`;
             meses.push(mesStr);
             let dividasFiltradas = dividas.filter(d => {
-                if(abaFiltroAtual !== 'all' && abaFiltroAtual !== 'graficos') return d.cartao === abaFiltroAtual;
+                if(abaFiltroAtual === 'A' || abaFiltroAtual === 'B') return d.cartao === abaFiltroAtual;
                 return true;
             });
             let totalPago = 0;
@@ -620,9 +620,10 @@
                 d.pagamentos?.forEach(p => { if(p.data.startsWith(mesStr)) totalPago += d.valorParcela; });
                 if(d.parcelaAtual <= d.totalParcelas) {
                     for(let j = d.parcelaAtual; j <= d.totalParcelas; j++) {
-                        let [dia, mes, ano] = calcularVencimento(d.inicio, j, d.cartao)?.split('/') || [];
-                        if(mes && ano) {
-                            let dueStr = `${ano}-${mes.padStart(2,'0')}`;
+                        let venc = calcularVencimento(d.inicio, j, d.cartao);
+                        if(venc) {
+                            let [dia, mes, ano] = venc.split('/');
+                            let dueStr = `${ano}-${mes}`;
                             if(dueStr === mesStr) totalDevido += d.valorParcela;
                         }
                     }
@@ -660,36 +661,48 @@
                         title: { display: true, text: 'Valor (R$)' },
                         grid: { display: false }
                     },
-                    x: {
-                        grid: { display: false }
-                    }
+                    x: { grid: { display: false } }
                 }
             }
         });
     }
 
-    function alternarVisao(mostrarGraficos) {
+    function alternarVisao() {
         const graficosDiv = document.getElementById('graficosContainer');
-        const conteudoListas = document.getElementById('conteudoListas');
-        if(mostrarGraficos) {
+        const divActiveLoans = document.getElementById('divActiveLoans');
+        const divQuitadasLista = document.getElementById('divQuitadasLista');
+        const divTabelaGeral = document.getElementById('divTabelaGeral');
+        
+        if(abaFiltroAtual === 'graficos') {
             graficosDiv.style.display = 'block';
-            conteudoListas.style.display = 'none';
+            divActiveLoans.style.display = 'none';
+            divQuitadasLista.style.display = 'none';
+            divTabelaGeral.style.display = 'none';
             atualizarGrafico();
+            return;
+        }
+        
+        graficosDiv.style.display = 'none';
+        
+        if(abaFiltroAtual === 'quitadas') {
+            divActiveLoans.style.display = 'none';
+            divQuitadasLista.style.display = 'block';
+            divTabelaGeral.style.display = 'none';
+        } else if(abaFiltroAtual === 'all') {
+            divActiveLoans.style.display = 'none';
+            divQuitadasLista.style.display = 'none';
+            divTabelaGeral.style.display = 'block';
         } else {
-            graficosDiv.style.display = 'none';
-            conteudoListas.style.display = 'block';
+            divActiveLoans.style.display = 'block';
+            divQuitadasLista.style.display = 'none';
+            divTabelaGeral.style.display = 'block';
         }
     }
 
     function atualizarTela() {
-        if(abaFiltroAtual === 'graficos') {
-            alternarVisao(true);
-            return;
-        }
+        alternarVisao();
         
-        alternarVisao(false);
-        
-        let ativos = getFiltered();
+        let ativos = getFilteredAtivos();
         let todosAtivos = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
         let totalDivida = todosAtivos.reduce((s, d) => s + (d.totalParcelas - d.parcelaAtual + 1) * d.valorParcela, 0);
         let mesRef = document.getElementById('mesReferencia').value || currentMonth;
@@ -703,6 +716,7 @@
             <div class="stat-card"><h3>📦 Dívidas ativas</h3><div class="value">${todosAtivos.length}</div></div>
         `;
         
+        // Lista de dívidas ativas
         let activeDiv = document.getElementById('activeLoansList');
         if(ativos.length === 0) {
             activeDiv.innerHTML = '<p>Nenhuma dívida ativa para esta visualização.</p>';
@@ -714,9 +728,9 @@
                 let percent = ((d.parcelaAtual-1)/d.totalParcelas)*100;
                 return `
                     <div class="divida-card">
-                        <div class="divida-header"><span>${d.nome} (Cartão ${d.cartao} - vence dia ${d.cartao === 'A' ? '10' : '25'})</span><span class="badge">${d.parcelaAtual}/${d.totalParcelas}</span></div>
+                        <div class="divida-header"><span>${d.nome} (Cartão ${d.cartao})</span><span class="badge">${d.parcelaAtual}/${d.totalParcelas}</span></div>
                         <div>💰 R$ ${d.valorParcela.toFixed(2)} / parcela</div>
-                        <div>📅 Início: ${d.inicio} | 🔜 Vencimento: ${vencimento}</div>
+                        <div>📅 Início: ${formatarDataBR(d.inicio)} | 🔜 Vencimento: ${vencimento}</div>
                         <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
                         <div><strong>Faltam: ${faltam}x R$ ${d.valorParcela.toFixed(2)} = R$ ${pendente.toFixed(2)}</strong></div>
                         <div>📞 WhatsApp: ${d.whats || 'não cadastrado'}</div>
@@ -726,27 +740,16 @@
             }).join('');
         }
         
-        let quitadas = getQuitadasFiltradas();
-        let paidDiv = document.getElementById('paidLoansList');
-        if(quitadas.length === 0) {
-            paidDiv.innerHTML = '<p>Nenhuma dívida quitada.</p>';
-        } else {
-            paidDiv.innerHTML = quitadas.map(d => `
-                <div class="divida-card" style="border-left-color:var(--success); opacity:0.8">
-                    <div><strong>${d.nome}</strong> (QUITADA) - Cartão ${d.cartao} - ${d.totalParcelas}x R$ ${d.valorParcela}</div>
-                    <div>Início: ${d.inicio}</div>
-                </div>
-            `).join('');
-        }
-        
-        let ativosTabela = getAtivosParaTabela();
+        // Tabela de dívidas ativas
+        let ativosTabela = ativos;
         let tableBody = document.getElementById('tableBody');
         if(ativosTabela.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="7">Nenhuma dívida ativa no momento.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="8">Nenhuma dívida ativa no momento.</td></tr>';
         } else {
             tableBody.innerHTML = ativosTabela.map(d => {
                 let faltam = d.totalParcelas - d.parcelaAtual + 1;
                 let pendente = faltam * d.valorParcela;
+                let vencimento = calcularVencimento(d.inicio, d.parcelaAtual, d.cartao) || '—';
                 return `<tr>
                     <td><strong>${d.nome}</strong></td>
                     <td>${d.cartao}</td>
@@ -754,13 +757,35 @@
                     <td>R$ ${d.valorParcela.toFixed(2)}</td>
                     <td>${faltam}</td>
                     <td>R$ ${pendente.toFixed(2)}</td>
-                    <td><button class="btn-sm" onclick="abrirWhats(${d.id})" style="background:#25D366;">📲</button></td>
+                    <td>${vencimento}</td>
+                    <td><button class="btn-sm" onclick="abrirWhats(${d.id})" style="background:#25D366;">📲</button>
+                </tr>`;
+            }).join('');
+        }
+        
+        // Tabela de dívidas quitadas
+        let quitadas = getQuitadas();
+        let quitadasBody = document.getElementById('quitadasTableBody');
+        if(quitadas.length === 0) {
+            quitadasBody.innerHTML = '<tr><td colspan="7">Nenhuma dívida quitada.</td></tr>';
+        } else {
+            quitadasBody.innerHTML = quitadas.map(d => {
+                let totalPago = d.totalParcelas * d.valorParcela;
+                let dataQuitacao = d.pagamentos && d.pagamentos.length > 0 ? 
+                    formatarDataBR(d.pagamentos[d.pagamentos.length-1].data) : formatarDataBR(d.inicio);
+                return `<tr>
+                    <td><strong>${d.nome}</strong></td>
+                    <td>${d.cartao}</td>
+                    <td>${d.totalParcelas}</td>
+                    <td>R$ ${d.valorParcela.toFixed(2)}</td>
+                    <td>R$ ${totalPago.toFixed(2)}</td>
+                    <td>${dataQuitacao}</td>
+                    <td>${d.whats || 'não cadastrado'}</td>
                 </tr>`;
             }).join('');
         }
         
         let todosAtivosSelect = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
-        if(abaFiltroAtual !== 'all' && abaFiltroAtual !== 'graficos') todosAtivosSelect = todosAtivosSelect.filter(d => d.cartao === abaFiltroAtual);
         let select = document.getElementById('payLoanSelect');
         select.innerHTML = todosAtivosSelect.map(d => `<option value="${d.id}">${d.nome} (Cartão ${d.cartao}) - ${d.parcelaAtual}/${d.totalParcelas} - R$ ${d.valorParcela}</option>`).join('');
         
@@ -824,7 +849,6 @@
         let cartao = document.getElementById('newCard').value;
         let inicio = document.getElementById('newDate').value;
         
-        // Validação melhorada
         if(!nome) { alert("Por favor, preencha o Nome completo"); return; }
         if(isNaN(valor) || valor <= 0) { alert("Por favor, preencha o Valor da parcela corretamente"); return; }
         if(isNaN(total) || total <= 0) { alert("Por favor, preencha o Total de parcelas corretamente"); return; }
@@ -848,7 +872,6 @@
         salvarDados();
         atualizarTela();
         
-        // Limpar formulário
         document.getElementById('newName').value = '';
         document.getElementById('newWhats').value = '';
         document.getElementById('newInstallment').value = '';
@@ -922,13 +945,13 @@
     document.getElementById('exportExcelBtn').onclick = () => {
         let dadosExport = dividas.map(d => ({ 
             Nome: d.nome, 
-            WhatsApp: d.whats, 
+            WhatsApp: d.whats || '', 
             ValorParcela: d.valorParcela, 
             TotalParcelas: d.totalParcelas, 
             ParcelaAtual: d.parcelaAtual, 
             Status: d.parcelaAtual > d.totalParcelas ? 'Quitado' : 'Ativo', 
             Cartão: d.cartao, 
-            Início: d.inicio 
+            Início: formatarDataBR(d.inicio)
         }));
         let ws = XLSX.utils.json_to_sheet(dadosExport);
         let wb = XLSX.utils.book_new();
