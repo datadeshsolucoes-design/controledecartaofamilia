@@ -138,29 +138,36 @@
             font-weight: 700;
         }
 
-        /* Abas de navegação principal */
-        .nav-aba {
+        /* Abas horizontais (menu superior estilo navegador) */
+        .nav-horizontal {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 25px;
             flex-wrap: wrap;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 8px;
         }
 
-        .nav-aba-btn {
-            background: var(--card);
-            border: 1px solid var(--border);
-            padding: 10px 24px;
+        .nav-btn {
+            background: transparent;
+            border: none;
+            padding: 12px 28px;
             border-radius: 40px;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 1rem;
             cursor: pointer;
-            color: var(--text);
+            color: var(--text-light);
+            transition: all 0.2s;
         }
 
-        .nav-aba-btn.active {
+        .nav-btn:hover {
+            background: var(--bg);
+            color: var(--primary);
+        }
+
+        .nav-btn.active {
             background: var(--primary);
             color: white;
-            border-color: var(--primary);
         }
 
         /* Abas de formulário */
@@ -340,6 +347,7 @@
         @media (max-width: 700px) {
             body { padding: 12px; font-size: 16px; }
             .stat-card .value { font-size: 1.5rem; }
+            .nav-btn { padding: 8px 16px; font-size: 0.9rem; }
         }
     </style>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
@@ -360,6 +368,13 @@
 
     <!-- Cards resumo -->
     <div class="stats-grid" id="statsGrid"></div>
+
+    <!-- Abas horizontais (estilo menu) -->
+    <div class="nav-horizontal">
+        <button class="nav-btn active" data-filtro-cartao="all">📋 Todos os cartões</button>
+        <button class="nav-btn" data-filtro-cartao="A">💳 Cartão A (dia 10)</button>
+        <button class="nav-btn" data-filtro-cartao="B">💳 Cartão B (dia 25)</button>
+    </div>
 
     <!-- Abas de formulário (ações) -->
     <div class="tabs">
@@ -421,13 +436,6 @@
         </div>
     </div>
 
-    <!-- Abas organizadoras (Todos / Cartão A / Cartão B) -->
-    <div class="nav-aba">
-        <button class="nav-aba-btn active" data-filtro-cartao="all">📋 Todos os cartões</button>
-        <button class="nav-aba-btn" data-filtro-cartao="A">💳 Cartão A (dia 10)</button>
-        <button class="nav-aba-btn" data-filtro-cartao="B">💳 Cartão B (dia 25)</button>
-    </div>
-
     <!-- Lista de dívidas ativas -->
     <h2>📋 Dívidas ativas</h2>
     <div id="activeLoansList"></div>
@@ -435,7 +443,7 @@
     <h2>✅ Histórico (Quitadas)</h2>
     <div id="paidLoansList"></div>
 
-    <!-- Tabela completa (mostra todos A + B juntos) -->
+    <!-- Tabela completa (mostra todos A + B juntos sempre) -->
     <h2>📊 Tabela completa de todas as dívidas</h2>
     <div class="table-container">
         <table class="data-table" id="fullTable">
@@ -486,12 +494,11 @@
         if(!dividas.length) dividas = [];
     }
 
-    function getFiltered(abaCartao = null) {
-        let cartaoFiltro = abaCartao !== null ? abaCartao : abaCartaoAtual;
+    function getFiltered() {
         let ativos = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
         let nome = document.getElementById('filtroNome').value.toLowerCase();
         if(nome) ativos = ativos.filter(d => d.nome.toLowerCase().includes(nome));
-        if(cartaoFiltro !== 'all') ativos = ativos.filter(d => d.cartao === cartaoFiltro);
+        if(abaCartaoAtual !== 'all') ativos = ativos.filter(d => d.cartao === abaCartaoAtual);
         return ativos;
     }
 
@@ -520,7 +527,7 @@
 
     function atualizarTela() {
         let ativos = getFiltered();
-        let todosAtivos = getFiltered('all');
+        let todosAtivos = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
         let totalDivida = todosAtivos.reduce((s, d) => s + (d.totalParcelas - d.parcelaAtual + 1) * d.valorParcela, 0);
         let mesRef = document.getElementById('mesReferencia').value || currentMonth;
         let pagoMes = getPaymentsInMonth(mesRef);
@@ -534,52 +541,70 @@
         `;
         
         let activeDiv = document.getElementById('activeLoansList');
-        activeDiv.innerHTML = ativos.map(d => {
-            let faltam = d.totalParcelas - d.parcelaAtual + 1;
-            let pendente = faltam * d.valorParcela;
-            let vencimento = calcularVencimento(d.inicio, d.parcelaAtual, d.cartao) || '—';
-            let percent = ((d.parcelaAtual-1)/d.totalParcelas)*100;
-            return `
-                <div class="divida-card">
-                    <div class="divida-header"><span>${d.nome} (Cartão ${d.cartao} - vence dia ${d.cartao === 'A' ? '10' : '25'})</span><span class="badge">${d.parcelaAtual}/${d.totalParcelas}</span></div>
-                    <div>💰 R$ ${d.valorParcela.toFixed(2)} / parcela</div>
-                    <div>📅 Início: ${d.inicio} | 🔜 Vencimento: ${vencimento}</div>
-                    <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
-                    <div><strong>Faltam: ${faltam}x R$ ${d.valorParcela.toFixed(2)} = R$ ${pendente.toFixed(2)}</strong></div>
-                    <div>📞 WhatsApp: ${d.whats || 'não cadastrado'}</div>
-                    <div class="actions" style="display:flex; gap:8px; margin-top:10px;">
-                        <button class="btn-sm" onclick="abrirWhats(${d.id})">📲 Cobrar WhatsApp</button>
+        if(ativos.length === 0) {
+            activeDiv.innerHTML = '<p>Nenhuma dívida ativa para esta visualização.</p>';
+        } else {
+            activeDiv.innerHTML = ativos.map(d => {
+                let faltam = d.totalParcelas - d.parcelaAtual + 1;
+                let pendente = faltam * d.valorParcela;
+                let vencimento = calcularVencimento(d.inicio, d.parcelaAtual, d.cartao) || '—';
+                let percent = ((d.parcelaAtual-1)/d.totalParcelas)*100;
+                return `
+                    <div class="divida-card">
+                        <div class="divida-header"><span>${d.nome} (Cartão ${d.cartao} - vence dia ${d.cartao === 'A' ? '10' : '25'})</span><span class="badge">${d.parcelaAtual}/${d.totalParcelas}</span></div>
+                        <div>💰 R$ ${d.valorParcela.toFixed(2)} / parcela</div>
+                        <div>📅 Início: ${d.inicio} | 🔜 Vencimento: ${vencimento}</div>
+                        <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
+                        <div><strong>Faltam: ${faltam}x R$ ${d.valorParcela.toFixed(2)} = R$ ${pendente.toFixed(2)}</strong></div>
+                        <div>📞 WhatsApp: ${d.whats || 'não cadastrado'}</div>
+                        <div class="actions" style="display:flex; gap:8px; margin-top:10px;">
+                            <button class="btn-sm" onclick="abrirWhats(${d.id})">📲 Cobrar WhatsApp</button>
+                        </div>
                     </div>
-                </div>
-            `;
-        }).join('');
-        
-        if(ativos.length === 0) activeDiv.innerHTML = '<p>Nenhuma dívida ativa para esta visualização.</p>';
+                `;
+            }).join('');
+        }
         
         let paidDiv = document.getElementById('paidLoansList');
         let quitadas = dividas.filter(d => d.parcelaAtual > d.totalParcelas);
         if(abaCartaoAtual !== 'all') quitadas = quitadas.filter(d => d.cartao === abaCartaoAtual);
-        paidDiv.innerHTML = quitadas.map(d => `
-            <div class="divida-card" style="border-left-color:var(--success); opacity:0.8">
-                <div><strong>${d.nome}</strong> (QUITADA) - Cartão ${d.cartao} - ${d.totalParcelas}x R$ ${d.valorParcela}</div>
-                <div>Início: ${d.inicio}</div>
-            </div>
-        `).join('');
+        if(quitadas.length === 0) {
+            paidDiv.innerHTML = '<p>Nenhuma dívida quitada.</p>';
+        } else {
+            paidDiv.innerHTML = quitadas.map(d => `
+                <div class="divida-card" style="border-left-color:var(--success); opacity:0.8">
+                    <div><strong>${d.nome}</strong> (QUITADA) - Cartão ${d.cartao} - ${d.totalParcelas}x R$ ${d.valorParcela}</div>
+                    <div>Início: ${d.inicio}</div>
+                </div>
+            `).join('');
+        }
         
         // Tabela completa (mostra TODOS, sem filtro de aba)
-        let todosAtivosTabela = getFiltered('all');
+        let todosAtivosTabela = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
         let tableBody = document.getElementById('tableBody');
-        tableBody.innerHTML = todosAtivosTabela.map(d => {
-            let faltam = d.totalParcelas - d.parcelaAtual + 1;
-            let pendente = faltam * d.valorParcela;
-            return `<tr><td><strong>${d.nome}</strong></td><td>${d.cartao}</td><td>${d.parcelaAtual}/${d.totalParcelas}</td><td>R$ ${d.valorParcela.toFixed(2)}</td><td>${faltam}</td><td>R$ ${pendente.toFixed(2)}</td><td><button class="btn-sm" onclick="abrirWhats(${d.id})" style="background:#25D366;">📲</button></td></tr>`;
-        }).join('');
+        if(todosAtivosTabela.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="7">Nenhuma dívida ativa no momento.</td></tr>';
+        } else {
+            tableBody.innerHTML = todosAtivosTabela.map(d => {
+                let faltam = d.totalParcelas - d.parcelaAtual + 1;
+                let pendente = faltam * d.valorParcela;
+                return `<tr>
+                    <td><strong>${d.nome}</strong></td>
+                    <td>${d.cartao}</td>
+                    <td>${d.parcelaAtual}/${d.totalParcelas}</td>
+                    <td>R$ ${d.valorParcela.toFixed(2)}</td>
+                    <td>${faltam}</td>
+                    <td>R$ ${pendente.toFixed(2)}</td>
+                    <td><button class="btn-sm" onclick="abrirWhats(${d.id})" style="background:#25D366;">📲</button></td>
+                `;
+            }).join('');
+        }
         
         let select = document.getElementById('payLoanSelect');
         select.innerHTML = todosAtivosTabela.map(d => `<option value="${d.id}">${d.nome} (Cartão ${d.cartao}) - ${d.parcelaAtual}/${d.totalParcelas} - R$ ${d.valorParcela}</option>`).join('');
         
         let editSelect = document.getElementById('editLoanSelect');
-        editSelect.innerHTML = dividas.map(d => `<option value="${d.id}">${d.nome} (Cartão ${d.cartao}) - ${d.parcelaAtual}/${d.totalParcelas}</option>`).join('');
+        editSelect.innerHTML = dividas.map(d => `<option value="${d.id}">${d.nome} (Cartão ${d.cartao}) - ${d.parcelaAtual}/${d.totalParcelas}${d.parcelaAtual > d.totalParcelas ? ' [QUITADA]' : ''}</option>`).join('');
         let selected = dividas.find(d => d.id == editSelect.value);
         if(selected) {
             document.getElementById('editInstallmentValue').value = selected.valorParcela;
@@ -589,7 +614,7 @@
 
     function setAbaCartao(cartao) {
         abaCartaoAtual = cartao;
-        document.querySelectorAll('.nav-aba-btn').forEach(btn => {
+        document.querySelectorAll('.nav-btn').forEach(btn => {
             if(btn.getAttribute('data-filtro-cartao') === cartao) btn.classList.add('active');
             else btn.classList.remove('active');
         });
@@ -742,7 +767,7 @@
         };
     });
     
-    document.querySelectorAll('.nav-aba-btn').forEach(btn => {
+    document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.onclick = () => setAbaCartao(btn.getAttribute('data-filtro-cartao'));
     });
     
