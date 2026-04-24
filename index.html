@@ -138,6 +138,32 @@
             font-weight: 700;
         }
 
+        /* Abas de navegação principal */
+        .nav-aba {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-aba-btn {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            color: var(--text);
+        }
+
+        .nav-aba-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Abas de formulário */
         .tabs {
             display: flex;
             flex-wrap: wrap;
@@ -329,14 +355,13 @@
     <div class="controls-bar">
         <div class="filter-group"><label>📅 Mês referência:</label><input type="month" id="mesReferencia"></div>
         <div class="filter-group"><label>🔍 Nome:</label><input type="text" id="filtroNome" placeholder="Digite o nome"></div>
-        <div class="filter-group"><label>💳 Cartão:</label><select id="filtroCartao"><option value="all">Ambos</option><option value="A">Cartão A (dia 10)</option><option value="B">Cartão B (dia 25)</option></select></div>
         <button id="btnLimparFiltros" style="background:var(--text-light); width:auto;">🧹 Limpar</button>
     </div>
 
-    <!-- Cards -->
+    <!-- Cards resumo -->
     <div class="stats-grid" id="statsGrid"></div>
 
-    <!-- Abas -->
+    <!-- Abas de formulário (ações) -->
     <div class="tabs">
         <button class="tab-btn active" data-tab="newLoan">➕ Nova dívida</button>
         <button class="tab-btn" data-tab="pay">💰 Pagar parcela</button>
@@ -344,7 +369,7 @@
         <button class="tab-btn" data-tab="backup">💾 Backup/Excel</button>
     </div>
 
-    <!-- NOVA DÍVIDA -->
+    <!-- Formulários -->
     <div id="newLoan" class="form-panel active">
         <h3>➕ Cadastrar nova dívida no cartão</h3>
         <div class="form-row">
@@ -361,7 +386,6 @@
         <button id="createLoanBtn">✅ Criar dívida</button>
     </div>
 
-    <!-- PAGAR PARCELA -->
     <div id="pay" class="form-panel">
         <h3>💰 Pagar parcela</h3>
         <div class="form-row">
@@ -371,7 +395,6 @@
         <button id="payInstallmentBtn">✅ Confirmar pagamento</button>
     </div>
 
-    <!-- EDITAR/EXCLUIR (COM SENHA) -->
     <div id="edit" class="form-panel">
         <h3>✏️ Editar ou excluir dívida</h3>
         <div class="form-row">
@@ -388,7 +411,6 @@
         </div>
     </div>
 
-    <!-- BACKUP -->
     <div id="backup" class="form-panel">
         <h3>💾 Exportar / Importar dados</h3>
         <div class="form-row">
@@ -399,14 +421,21 @@
         </div>
     </div>
 
-    <!-- LISTA DE DÍVIDAS ATIVAS -->
+    <!-- Abas organizadoras (Todos / Cartão A / Cartão B) -->
+    <div class="nav-aba">
+        <button class="nav-aba-btn active" data-filtro-cartao="all">📋 Todos os cartões</button>
+        <button class="nav-aba-btn" data-filtro-cartao="A">💳 Cartão A (dia 10)</button>
+        <button class="nav-aba-btn" data-filtro-cartao="B">💳 Cartão B (dia 25)</button>
+    </div>
+
+    <!-- Lista de dívidas ativas -->
     <h2>📋 Dívidas ativas</h2>
     <div id="activeLoansList"></div>
 
     <h2>✅ Histórico (Quitadas)</h2>
     <div id="paidLoansList"></div>
 
-    <!-- TABELA COMPLETA -->
+    <!-- Tabela completa (mostra todos A + B juntos) -->
     <h2>📊 Tabela completa de todas as dívidas</h2>
     <div class="table-container">
         <table class="data-table" id="fullTable">
@@ -432,6 +461,7 @@
     let dividas = [];
     let nextId = 1;
     let currentMonth = new Date().toISOString().slice(0,7);
+    let abaCartaoAtual = "all"; // all, A, B
     const CARD_DUE = { A: 10, B: 25 };
 
     function calcularVencimento(inicio, parcelaAtual, cartao) {
@@ -456,12 +486,12 @@
         if(!dividas.length) dividas = [];
     }
 
-    function getFiltered() {
+    function getFiltered(abaCartao = null) {
+        let cartaoFiltro = abaCartao !== null ? abaCartao : abaCartaoAtual;
         let ativos = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
         let nome = document.getElementById('filtroNome').value.toLowerCase();
-        let cartao = document.getElementById('filtroCartao').value;
         if(nome) ativos = ativos.filter(d => d.nome.toLowerCase().includes(nome));
-        if(cartao !== 'all') ativos = ativos.filter(d => d.cartao === cartao);
+        if(cartaoFiltro !== 'all') ativos = ativos.filter(d => d.cartao === cartaoFiltro);
         return ativos;
     }
 
@@ -490,7 +520,8 @@
 
     function atualizarTela() {
         let ativos = getFiltered();
-        let totalDivida = ativos.reduce((s, d) => s + (d.totalParcelas - d.parcelaAtual + 1) * d.valorParcela, 0);
+        let todosAtivos = getFiltered('all');
+        let totalDivida = todosAtivos.reduce((s, d) => s + (d.totalParcelas - d.parcelaAtual + 1) * d.valorParcela, 0);
         let mesRef = document.getElementById('mesReferencia').value || currentMonth;
         let pagoMes = getPaymentsInMonth(mesRef);
         let aPagarMes = getDueInMonth(mesRef);
@@ -499,7 +530,7 @@
             <div class="stat-card"><h3>💰 Dívida total</h3><div class="value">R$ ${totalDivida.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
             <div class="stat-card"><h3>📆 A pagar em ${mesRef}</h3><div class="value">R$ ${aPagarMes.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
             <div class="stat-card"><h3>✅ Pago em ${mesRef}</h3><div class="value">R$ ${pagoMes.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
-            <div class="stat-card"><h3>📦 Dívidas ativas</h3><div class="value">${ativos.length}</div></div>
+            <div class="stat-card"><h3>📦 Dívidas ativas</h3><div class="value">${todosAtivos.length}</div></div>
         `;
         
         let activeDiv = document.getElementById('activeLoansList');
@@ -510,7 +541,7 @@
             let percent = ((d.parcelaAtual-1)/d.totalParcelas)*100;
             return `
                 <div class="divida-card">
-                    <div class="divida-header"><span>${d.nome} (Cartão ${d.cartao})</span><span class="badge">${d.parcelaAtual}/${d.totalParcelas}</span></div>
+                    <div class="divida-header"><span>${d.nome} (Cartão ${d.cartao} - vence dia ${d.cartao === 'A' ? '10' : '25'})</span><span class="badge">${d.parcelaAtual}/${d.totalParcelas}</span></div>
                     <div>💰 R$ ${d.valorParcela.toFixed(2)} / parcela</div>
                     <div>📅 Início: ${d.inicio} | 🔜 Vencimento: ${vencimento}</div>
                     <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
@@ -523,32 +554,46 @@
             `;
         }).join('');
         
+        if(ativos.length === 0) activeDiv.innerHTML = '<p>Nenhuma dívida ativa para esta visualização.</p>';
+        
         let paidDiv = document.getElementById('paidLoansList');
-        paidDiv.innerHTML = dividas.filter(d => d.parcelaAtual > d.totalParcelas).map(d => `
+        let quitadas = dividas.filter(d => d.parcelaAtual > d.totalParcelas);
+        if(abaCartaoAtual !== 'all') quitadas = quitadas.filter(d => d.cartao === abaCartaoAtual);
+        paidDiv.innerHTML = quitadas.map(d => `
             <div class="divida-card" style="border-left-color:var(--success); opacity:0.8">
                 <div><strong>${d.nome}</strong> (QUITADA) - Cartão ${d.cartao} - ${d.totalParcelas}x R$ ${d.valorParcela}</div>
                 <div>Início: ${d.inicio}</div>
             </div>
         `).join('');
         
+        // Tabela completa (mostra TODOS, sem filtro de aba)
+        let todosAtivosTabela = getFiltered('all');
         let tableBody = document.getElementById('tableBody');
-        tableBody.innerHTML = ativos.map(d => {
+        tableBody.innerHTML = todosAtivosTabela.map(d => {
             let faltam = d.totalParcelas - d.parcelaAtual + 1;
             let pendente = faltam * d.valorParcela;
             return `<tr><td><strong>${d.nome}</strong></td><td>${d.cartao}</td><td>${d.parcelaAtual}/${d.totalParcelas}</td><td>R$ ${d.valorParcela.toFixed(2)}</td><td>${faltam}</td><td>R$ ${pendente.toFixed(2)}</td><td><button class="btn-sm" onclick="abrirWhats(${d.id})" style="background:#25D366;">📲</button></td></tr>`;
         }).join('');
         
         let select = document.getElementById('payLoanSelect');
-        select.innerHTML = ativos.map(d => `<option value="${d.id}">${d.nome} - ${d.parcelaAtual}/${d.totalParcelas} - R$ ${d.valorParcela}</option>`).join('');
+        select.innerHTML = todosAtivosTabela.map(d => `<option value="${d.id}">${d.nome} (Cartão ${d.cartao}) - ${d.parcelaAtual}/${d.totalParcelas} - R$ ${d.valorParcela}</option>`).join('');
         
         let editSelect = document.getElementById('editLoanSelect');
-        let todasDividas = dividas.filter(d => true);
-        editSelect.innerHTML = todasDividas.map(d => `<option value="${d.id}">${d.nome} - ${d.parcelaAtual}/${d.totalParcelas} - ${d.parcelaAtual > d.totalParcelas ? 'QUITADA' : 'ATIVA'}</option>`).join('');
+        editSelect.innerHTML = dividas.map(d => `<option value="${d.id}">${d.nome} (Cartão ${d.cartao}) - ${d.parcelaAtual}/${d.totalParcelas}</option>`).join('');
         let selected = dividas.find(d => d.id == editSelect.value);
         if(selected) {
             document.getElementById('editInstallmentValue').value = selected.valorParcela;
             document.getElementById('editTotalParcels').value = selected.totalParcelas;
         }
+    }
+
+    function setAbaCartao(cartao) {
+        abaCartaoAtual = cartao;
+        document.querySelectorAll('.nav-aba-btn').forEach(btn => {
+            if(btn.getAttribute('data-filtro-cartao') === cartao) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+        atualizarTela();
     }
 
     window.abrirWhats = function(id) {
@@ -557,11 +602,10 @@
         let faltam = divida.totalParcelas - divida.parcelaAtual + 1;
         let totalPendente = faltam * divida.valorParcela;
         let vencimento = calcularVencimento(divida.inicio, divida.parcelaAtual, divida.cartao) || 'em breve';
-        let msg = `Olá ${divida.nome}! 🏦\n\nSituação da sua dívida no cartão:\n📌 Parcela: ${divida.parcelaAtual}/${divida.totalParcelas}\n💰 Valor: R$ ${divida.valorParcela.toFixed(2)}\n📅 Próximo vencimento: ${vencimento}\n💵 Total pendente: R$ ${totalPendente.toFixed(2)}\n\nQualquer dúvida, entre em contato!`;
+        let msg = `Olá ${divida.nome}! 🏦\n\nSituação da sua dívida no cartão ${divida.cartao}:\n📌 Parcela: ${divida.parcelaAtual}/${divida.totalParcelas}\n💰 Valor: R$ ${divida.valorParcela.toFixed(2)}\n📅 Próximo vencimento: ${vencimento}\n💵 Total pendente: R$ ${totalPendente.toFixed(2)}\n\nQualquer dúvida, entre em contato!`;
         document.getElementById('whatsNumero').value = divida.whats || '';
         document.getElementById('whatsMensagem').value = msg;
         document.getElementById('modalWhats').classList.remove('hidden');
-        window.whatsId = id;
     };
     
     document.getElementById('btnEnviarWhats').onclick = () => {
@@ -649,7 +693,6 @@
     
     document.getElementById('btnLimparFiltros').onclick = () => {
         document.getElementById('filtroNome').value = '';
-        document.getElementById('filtroCartao').value = 'all';
         document.getElementById('mesReferencia').value = '';
         atualizarTela();
     };
@@ -699,8 +742,11 @@
         };
     });
     
+    document.querySelectorAll('.nav-aba-btn').forEach(btn => {
+        btn.onclick = () => setAbaCartao(btn.getAttribute('data-filtro-cartao'));
+    });
+    
     document.getElementById('filtroNome').addEventListener('input', () => atualizarTela());
-    document.getElementById('filtroCartao').addEventListener('change', () => atualizarTela());
     document.getElementById('mesReferencia').addEventListener('change', () => atualizarTela());
     
     carregarDados();
