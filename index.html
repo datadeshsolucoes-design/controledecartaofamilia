@@ -50,7 +50,6 @@
             margin: 0 auto;
         }
 
-        /* TELA DE LOGIN */
         .login-container {
             max-width: 450px;
             margin: 80px auto;
@@ -92,7 +91,6 @@
             font-size: 0.85rem;
         }
 
-        /* BARRA DO USUÁRIO */
         .user-bar {
             display: flex;
             justify-content: space-between;
@@ -468,12 +466,6 @@
             display: none;
         }
 
-        .loading {
-            text-align: center;
-            padding: 50px;
-            font-size: 1.2rem;
-        }
-
         @media (max-width: 700px) {
             body { padding: 12px; font-size: 16px; }
             .stat-card .value { font-size: 1.3rem; }
@@ -502,7 +494,6 @@
             <button class="theme-toggle" id="themeToggle">🌙 Modo escuro</button>
         </div>
 
-        <!-- BARRA DO USUÁRIO -->
         <div class="user-bar">
             <div class="user-info">
                 <span>👤 Conectado como:</span>
@@ -512,7 +503,6 @@
             <button class="logout-btn" id="logoutBtn">🚪 Sair</button>
         </div>
 
-        <!-- FILTROS -->
         <div class="controls-bar">
             <div class="filters-identifier">🔍 ÁREA DE FILTROS</div>
             <div class="filter-group"><label>📅 Mês referência:</label><input type="month" id="mesReferencia"></div>
@@ -520,10 +510,8 @@
             <button id="btnLimparFiltros" style="background:var(--text-light); width:auto;">🧹 Limpar</button>
         </div>
 
-        <!-- CARDS -->
         <div class="stats-grid" id="statsGrid"></div>
 
-        <!-- BOTÕES DE AÇÃO (visíveis apenas para admin) -->
         <div id="adminActions" class="action-buttons" style="display: none;">
             <button class="action-btn active" data-acao="newLoan">➕ Nova dívida</button>
             <button class="action-btn" data-acao="pay">💰 Pagar parcela</button>
@@ -531,7 +519,6 @@
             <button class="action-btn" data-acao="backup">💾 Backup/Excel</button>
         </div>
 
-        <!-- FORMULÁRIOS (apenas admin) -->
         <div id="form-newLoan" class="form-panel">
             <h3>➕ Cadastrar nova dívida</h3>
             <div class="form-row">
@@ -542,8 +529,8 @@
             </div>
             <div class="form-row">
                 <div class="form-group"><label>Parcelas já pagas</label><input type="number" id="newPaid" placeholder="0" value="0"></div>
-                <div class="form-group"><label>Cartão</label><select id="newCard"><option value="A">Cartão A (dia 10)</option><option value="B">Cartão B (dia 25)</option></select></div>
-                <div class="form-group"><label>Data início</label><input type="date" id="newDate"></div>
+                <div class="form-group"><label>Cartão</label><select id="newCard"><option value="A">Cartão A (vence dia 10)</option><option value="B">Cartão B (vence dia 25)</option></select></div>
+                <div class="form-group"><label>Data início <span class="label-opcional">(opcional - calcula automático)</span></label><input type="date" id="newDate"></div>
             </div>
             <button id="createLoanBtn">✅ Criar dívida</button>
         </div>
@@ -586,7 +573,6 @@
             </div>
         </div>
 
-        <!-- ABAS -->
         <div class="tabs-container">
             <button class="filter-tab active" data-filtro="A">💳 Cartão A</button>
             <button class="filter-tab" data-filtro="B">💳 Cartão B</button>
@@ -630,7 +616,6 @@
     </div>
 </div>
 
-<!-- MODAL WHATSAPP -->
 <div id="modalWhats" class="modal hidden">
     <div class="modal-content">
         <h3>📲 Enviar cobrança via WhatsApp</h3>
@@ -642,10 +627,10 @@
 </div>
 
 <script>
-    // ✅ SEU LINK DO APPS SCRIPT JÁ ESTÁ AQUI ✅
     const API_URL = 'https://script.google.com/macros/s/AKfycbzFVHyUcEFsTIl4NOHJNjzou1kUAEAPL4trXv6NMEDAWtGfgKhT8Q-gYMmfwD16hjVxaw/exec';
-    
     const SENHA_ADMIN = "270601";
+    const CARD_DUE = { A: 10, B: 25 };
+    
     let dividas = [];
     let nextId = 1;
     let currentUser = null;
@@ -653,13 +638,44 @@
     let currentMonth = new Date().toISOString().slice(0,7);
     let abaFiltroAtual = "A";
     let chartInstance = null;
-    const CARD_DUE = { A: 10, B: 25 };
 
-    // ========== FUNÇÕES AUXILIARES ==========
     function formatarDataBR(dataISO) {
         if(!dataISO) return '';
         let partes = dataISO.split('-');
         return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+
+    function formatarDataISO(dataBR) {
+        if(!dataBR) return '';
+        let partes = dataBR.split('/');
+        return `${partes[2]}-${partes[1]}-${partes[0]}`;
+    }
+
+    // 🔥 FUNÇÃO QUE CALCULA A DATA DE INÍCIO AUTOMATICAMENTE 🔥
+    function calcularDataInicioAuto(pagas, cartao, dataPrimeiroPagamento = null) {
+        // Se tem data do primeiro pagamento, usa ela
+        if(dataPrimeiroPagamento) {
+            let data = new Date(dataPrimeiroPagamento);
+            // Volta os meses equivalentes às parcelas pagas
+            data.setMonth(data.getMonth() - (pagas - 1));
+            return data.toISOString().slice(0,10);
+        }
+        
+        // Se não tem pagamento, usa a data atual
+        let dataAtual = new Date();
+        let diaVencimento = CARD_DUE[cartao];
+        let ano = dataAtual.getFullYear();
+        let mes = dataAtual.getMonth();
+        
+        // Ajusta para o dia de vencimento do cartão
+        let dataCalculada = new Date(ano, mes, diaVencimento);
+        
+        // Se a data calculada for maior que a data atual, volta um mês
+        if(dataCalculada > dataAtual) {
+            dataCalculada.setMonth(dataCalculada.getMonth() - 1);
+        }
+        
+        return dataCalculada.toISOString().slice(0,10);
     }
 
     function calcularVencimento(inicio, parcelaAtual, cartao) {
@@ -674,7 +690,6 @@
         return `${String(finalDia).padStart(2,'0')}/${String(mesVenc).padStart(2,'0')}/${anoVenc}`;
     }
 
-    // ========== COMUNICAÇÃO COM GOOGLE SHEETS ==========
     async function carregarDadosCloud() {
         try {
             const response = await fetch(`${API_URL}?action=load`);
@@ -712,7 +727,6 @@
         }
     }
 
-    // ========== FILTROS ==========
     function getFilteredAtivos() {
         let ativos = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
         if(!isAdmin && currentUser) {
@@ -873,7 +887,6 @@
             `;
         }
         
-        // Lista de dívidas ativas
         let activeDiv = document.getElementById('activeLoansList');
         if(activeDiv) {
             if(ativos.length === 0) {
@@ -899,11 +912,10 @@
             }
         }
         
-        // Tabela de dívidas ativas
         let tableBody = document.getElementById('tableBody');
         if(tableBody) {
             if(ativos.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="8">Nenhuma dívida ativa.离子</tr>';
+                tableBody.innerHTML = '<tr><td colspan="8">Nenhuma dívida ativa.离子</td>';
             } else {
                 tableBody.innerHTML = ativos.map(d => {
                     let faltam = d.totalParcelas - d.parcelaAtual + 1;
@@ -911,8 +923,8 @@
                     let vencimento = calcularVencimento(d.inicio, d.parcelaAtual, d.cartao) || '—';
                     return `<tr>
                         <td><strong>${d.nome}</strong></td>
-                        <td>${d.cartao}</td>
-                        <td>${d.parcelaAtual}/${d.totalParcelas}</td>
+                        <td>${d.cartao}</d>
+                        <td>${d.parcelaAtual}/${d.totalParcelas}</d>
                         <td>R$ ${d.valorParcela.toFixed(2)}</d>
                         <td>${faltam}</d>
                         <td>R$ ${pendente.toFixed(2)}</d>
@@ -923,12 +935,11 @@
             }
         }
         
-        // Tabela de quitadas
         let quitadas = getQuitadas();
         let quitadasBody = document.getElementById('quitadasTableBody');
         if(quitadasBody) {
             if(quitadas.length === 0) {
-                quitadasBody.innerHTML = '<tr><td colspan="7">Nenhuma dívida quitada.}</td></tr>';
+                quitadasBody.innerHTML = '<tr><td colspan="7">Nenhuma dívida quitada.}</d></tr>';
             } else {
                 quitadasBody.innerHTML = quitadas.map(d => {
                     let totalPago = d.totalParcelas * d.valorParcela;
@@ -947,7 +958,6 @@
             }
         }
         
-        // Selects para admin
         if(isAdmin) {
             let todosAtivosSelect = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
             let paySelect = document.getElementById('payLoanSelect');
@@ -998,7 +1008,6 @@
         document.getElementById('modalWhats').classList.remove('hidden');
     };
     
-    // ========== EVENTOS ==========
     document.getElementById('btnEnviarWhats')?.addEventListener('click', () => {
         let numero = document.getElementById('whatsNumero').value.replace(/\D/g, '');
         let mensagem = encodeURIComponent(document.getElementById('whatsMensagem').value);
@@ -1019,18 +1028,38 @@
         let total = parseInt(document.getElementById('newTotal').value);
         let pagas = parseInt(document.getElementById('newPaid').value) || 0;
         let cartao = document.getElementById('newCard').value;
-        let inicio = document.getElementById('newDate').value;
+        let inicioFornecida = document.getElementById('newDate').value;
+        let inicio = inicioFornecida;
         
         if(!nome) { alert("Preencha o Nome"); return; }
         if(isNaN(valor) || valor <= 0) { alert("Valor inválido"); return; }
         if(isNaN(total) || total <= 0) { alert("Total de parcelas inválido"); return; }
         if(pagas >= total) { alert("Parcelas pagas não pode ser >= total"); return; }
-        if(!inicio) inicio = new Date().toISOString().slice(0,10);
+        
+        // 🔥 SE DATA INÍCIO NÃO FOI FORNECIDA, CALCULA AUTOMATICAMENTE 🔥
+        if(!inicio) {
+            // Se tem parcelas pagas, tenta calcular baseado nos pagamentos (se houver)
+            if(pagas > 0) {
+                // Para cálculo automático, vamos considerar que a primeira parcela foi paga na data atual
+                // ou em uma data simulada. Como não temos pagamentos ainda, usamos data atual
+                inicio = calcularDataInicioAuto(pagas, cartao, null);
+            } else {
+                inicio = calcularDataInicioAuto(pagas, cartao, null);
+            }
+        }
         
         dividas.push({ 
-            id: nextId++, nome, whats, valorParcela: valor, totalParcelas: total, 
-            parcelaAtual: pagas + 1, cartao, inicio, pagamentos: [] 
+            id: nextId++, 
+            nome, 
+            whats, 
+            valorParcela: valor, 
+            totalParcelas: total, 
+            parcelaAtual: pagas + 1, 
+            cartao, 
+            inicio, 
+            pagamentos: [] 
         });
+        
         await salvarDadosCloud();
         await carregarDadosCloud();
         atualizarTela();
@@ -1041,7 +1070,7 @@
         document.getElementById('newTotal').value = '';
         document.getElementById('newPaid').value = '0';
         document.getElementById('newDate').value = '';
-        alert("Dívida cadastrada!");
+        alert(`Dívida cadastrada! Data início calculada: ${formatarDataBR(inicio)}`);
     });
     
     document.getElementById('payInstallmentBtn')?.addEventListener('click', async () => {
@@ -1166,7 +1195,6 @@
         document.getElementById('loginSenha').value = '';
     });
     
-    // ========== LOGIN ==========
     document.getElementById('btnLogin')?.addEventListener('click', async () => {
         let nome = document.getElementById('loginNome').value.trim();
         let senha = document.getElementById('loginSenha').value;
@@ -1179,8 +1207,6 @@
         }
         
         errorDiv.classList.add('hidden');
-        
-        // Mostra loading
         document.getElementById('btnLogin').innerText = 'Carregando...';
         document.getElementById('btnLogin').disabled = true;
         
@@ -1215,7 +1241,6 @@
         if(e.key === 'Enter') document.getElementById('btnLogin').click();
     });
     
-    // Inicialização
     document.querySelectorAll('.action-btn').forEach(btn => {
         btn.addEventListener('click', () => setAcao(btn.getAttribute('data-acao')));
     });
