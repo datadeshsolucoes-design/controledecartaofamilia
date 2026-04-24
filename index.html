@@ -260,7 +260,6 @@
             border-radius: 10px;
         }
 
-        /* Abas de filtro horizontais */
         .filter-tabs {
             display: flex;
             gap: 12px;
@@ -381,7 +380,7 @@
         <div class="form-row">
             <div class="form-group"><label>Parcelas já pagas</label><input type="number" id="newPaid" placeholder="0" value="0"></div>
             <div class="form-group"><label>Cartão</label><select id="newCard"><option value="A">Cartão A (vence dia 10)</option><option value="B">Cartão B (vence dia 25)</option></select></div>
-            <div class="form-group"><label>Data início (opcional)</label><input type="date" id="newDate" placeholder="Deixe em branco para calcular automático"><div class="info-hint">💡 Se deixar em branco, será calculado com base nas parcelas pagas e no dia de vencimento do cartão</div></div>
+            <div class="form-group"><label>Data início (opcional)</label><input type="date" id="newDate"><div class="info-hint">💡 Deixe em branco para calcular automaticamente</div></div>
         </div>
         <button id="createLoanBtn">✅ Criar dívida</button>
     </div>
@@ -421,7 +420,6 @@
         </div>
     </div>
 
-    <!-- ABAS DE FILTRO HORIZONTAIS -->
     <div class="filter-tabs">
         <button class="filter-tab active" data-filter="all">📋 Todos os cartões</button>
         <button class="filter-tab" data-filter="A">💳 Cartão A (dia 10)</button>
@@ -461,26 +459,20 @@
     let filterCartao = "all";
     const CARD_DUE = { A: 10, B: 25 };
 
-    // Função para calcular data inicial baseado nas parcelas pagas e no dia do cartão
     function calcularDataInicioAutomatico(parcelasPagas, cartao) {
         let hoje = new Date();
         let diaVencimento = CARD_DUE[cartao];
-        
-        // Subtrai os meses (parcelas pagas)
         let ano = hoje.getFullYear();
         let mes = hoje.getMonth() - parcelasPagas;
         
-        // Ajusta ano e mês
         while (mes < 0) {
             mes += 12;
             ano--;
         }
         
-        // Pega o último dia do mês alvo
         let ultimoDia = new Date(ano, mes + 1, 0).getDate();
         let diaFinal = Math.min(diaVencimento, ultimoDia);
         
-        // Retorna no formato YYYY-MM-DD
         return `${ano}-${String(mes + 1).padStart(2, '0')}-${String(diaFinal).padStart(2, '0')}`;
     }
 
@@ -496,14 +488,24 @@
         return `${String(finalDia).padStart(2,'0')}/${String(mesVenc).padStart(2,'0')}/${anoVenc}`;
     }
 
-    function salvarDados() { localStorage.setItem('dividas_cartao_final', JSON.stringify(dividas)); localStorage.setItem('dividas_nextId_final', nextId); }
+    function salvarDados() { 
+        localStorage.setItem('dividas_cartao_final', JSON.stringify(dividas)); 
+        localStorage.setItem('dividas_nextId_final', nextId); 
+        console.log("Dados salvos:", dividas.length);
+    }
     
     function carregarDados() {
         let stored = localStorage.getItem('dividas_cartao_final');
         let storedId = localStorage.getItem('dividas_nextId_final');
-        if(stored) dividas = JSON.parse(stored);
+        if(stored) {
+            dividas = JSON.parse(stored);
+            console.log("Dados carregados:", dividas.length);
+        }
         if(storedId) nextId = parseInt(storedId);
-        if(!dividas.length) dividas = [];
+        if(!dividas.length) {
+            dividas = [];
+            console.log("Nenhum dado encontrado, iniciando vazio");
+        }
     }
 
     function getFiltered() {
@@ -517,7 +519,7 @@
     function getPaymentsInMonth(month) {
         let total = 0;
         dividas.forEach(d => {
-            d.pagamentos?.forEach(p => { if(p.data.startsWith(month)) total += d.valorParcela; });
+            d.pagamentos?.forEach(p => { if(p.data && p.data.startsWith(month)) total += d.valorParcela; });
         });
         return total;
     }
@@ -529,9 +531,11 @@
             for(let i = d.parcelaAtual; i <= d.totalParcelas; i++) {
                 let venc = calcularVencimento(d.inicio, i, d.cartao);
                 if(venc) {
-                    let [dia, mes, ano] = venc.split('/');
-                    let dueStr = `${ano}-${mes.padStart(2,'0')}`;
-                    if(dueStr === month) total += d.valorParcela;
+                    let partes = venc.split('/');
+                    if(partes.length === 3) {
+                        let dueStr = `${partes[2]}-${partes[1].padStart(2,'0')}`;
+                        if(dueStr === month) total += d.valorParcela;
+                    }
                 }
             }
         });
@@ -550,7 +554,7 @@
             <div class="stat-card"><h3>💰 Dívida total</h3><div class="value">R$ ${totalDivida.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
             <div class="stat-card"><h3>📆 A pagar em ${mesRef}</h3><div class="value">R$ ${aPagarMes.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
             <div class="stat-card"><h3>✅ Pago em ${mesRef}</h3><div class="value">R$ ${pagoMes.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
-            <div class="stat-card"><h3>📦 Dívidas ativas</h3><div class="value">${ativos.length}</div></div>
+            <div class="stat-card"><h3>📦 Dívidas ativas</h3><div class="value">${todosAtivos.length}</div></div>
         `;
         
         let activeDiv = document.getElementById('activeLoansList');
@@ -661,20 +665,32 @@
         let cartao = document.getElementById('newCard').value;
         let inicioManual = document.getElementById('newDate').value;
         
-        if(!nome || isNaN(valor) || isNaN(total) || valor<=0 || total<=0) { alert("Preencha todos os campos"); return; }
+        if(!nome) { alert("Digite o nome da pessoa"); return; }
+        if(isNaN(valor) || valor <= 0) { alert("Digite um valor de parcela válido"); return; }
+        if(isNaN(total) || total <= 0) { alert("Digite o total de parcelas válido"); return; }
         if(pagas >= total) { alert("Parcelas pagas não pode ser maior ou igual ao total"); return; }
         
         let inicio = inicioManual;
         if (!inicio) {
-            // Calcula automaticamente com base nas parcelas pagas e no dia do cartão
             inicio = calcularDataInicioAutomatico(pagas, cartao);
         }
         
-        dividas.push({ id: nextId++, nome, whats, valorParcela: valor, totalParcelas: total, parcelaAtual: pagas+1, cartao, inicio, pagamentos: [] });
+        let novaDivida = { 
+            id: nextId++, 
+            nome: nome, 
+            whats: whats, 
+            valorParcela: valor, 
+            totalParcelas: total, 
+            parcelaAtual: pagas + 1, 
+            cartao: cartao, 
+            inicio: inicio, 
+            pagamentos: [] 
+        };
+        
+        dividas.push(novaDivida);
         salvarDados();
         atualizarTela();
         
-        // Limpar formulário
         document.getElementById('newName').value = '';
         document.getElementById('newWhats').value = '';
         document.getElementById('newInstallment').value = '';
@@ -682,27 +698,29 @@
         document.getElementById('newPaid').value = '0';
         document.getElementById('newDate').value = '';
         
-        alert(`Dívida cadastrada! Data início calculada: ${inicio}`);
+        alert(`✅ Dívida cadastrada com sucesso!\n\n📅 Data início calculada: ${inicio}`);
+        console.log("Dívida adicionada:", novaDivida);
     };
     
     document.getElementById('payInstallmentBtn').onclick = () => {
         let id = parseInt(document.getElementById('payLoanSelect').value);
         let data = document.getElementById('payDate').value;
         let divida = dividas.find(d => d.id === id);
-        if(!divida || divida.parcelaAtual > divida.totalParcelas) { alert("Dívida já quitada"); return; }
+        if(!divida) { alert("Dívida não encontrada"); return; }
+        if(divida.parcelaAtual > divida.totalParcelas) { alert("Dívida já quitada"); return; }
         if(!data) { alert("Informe a data do pagamento"); return; }
         if(!divida.pagamentos) divida.pagamentos = [];
-        divida.pagamentos.push({ data, parcela: divida.parcelaAtual });
+        divida.pagamentos.push({ data: data, parcela: divida.parcelaAtual });
         divida.parcelaAtual++;
         salvarDados();
         atualizarTela();
-        alert("Pagamento registrado!");
+        alert("✅ Pagamento registrado com sucesso!");
         document.getElementById('payDate').value = '';
     };
     
     function verificarSenha() {
         let senha = document.getElementById('editSenha').value;
-        if(senha !== SENHA) { alert("Senha incorreta!"); return false; }
+        if(senha !== SENHA) { alert("❌ Senha incorreta!"); return false; }
         return true;
     }
     
@@ -713,25 +731,25 @@
         if(!divida) return;
         let novoValor = parseFloat(document.getElementById('editInstallmentValue').value);
         let novoTotal = parseInt(document.getElementById('editTotalParcels').value);
-        if(isNaN(novoValor) || isNaN(novoTotal)) return;
+        if(isNaN(novoValor) || isNaN(novoTotal)) { alert("Valores inválidos"); return; }
         divida.valorParcela = novoValor;
         if(novoTotal < divida.parcelaAtual) divida.parcelaAtual = novoTotal;
         divida.totalParcelas = novoTotal;
         if(divida.parcelaAtual > divida.totalParcelas) divida.parcelaAtual = divida.totalParcelas + 1;
         salvarDados();
         atualizarTela();
-        alert("Dívida atualizada!");
+        alert("✅ Dívida atualizada!");
         document.getElementById('editSenha').value = '';
     };
     
     document.getElementById('deleteLoanBtn').onclick = () => {
         if(!verificarSenha()) return;
         let id = parseInt(document.getElementById('editLoanSelect').value);
-        if(confirm("Excluir permanentemente esta dívida?")) {
+        if(confirm("⚠️ Tem certeza que deseja excluir esta dívida permanentemente?")) {
             dividas = dividas.filter(d => d.id !== id);
             salvarDados();
             atualizarTela();
-            alert("Dívida excluída!");
+            alert("✅ Dívida excluída!");
             document.getElementById('editSenha').value = '';
         }
     };
@@ -743,18 +761,33 @@
     };
     
     document.getElementById('exportExcelBtn').onclick = () => {
-        let ws = XLSX.utils.json_to_sheet(dividas.map(d => ({ Nome: d.nome, WhatsApp: d.whats, ValorParcela: d.valorParcela, TotalParcelas: d.totalParcelas, ParcelaAtual: d.parcelaAtual, Status: d.parcelaAtual > d.totalParcelas ? 'Quitado' : 'Ativo', Cartão: d.cartao, Início: d.inicio })));
+        let dadosExport = dividas.map(d => ({ 
+            Nome: d.nome, 
+            WhatsApp: d.whats, 
+            ValorParcela: d.valorParcela, 
+            TotalParcelas: d.totalParcelas, 
+            ParcelaAtual: d.parcelaAtual, 
+            Status: d.parcelaAtual > d.totalParcelas ? 'Quitado' : 'Ativo', 
+            Cartão: d.cartao, 
+            Início: d.inicio 
+        }));
+        let ws = XLSX.utils.json_to_sheet(dadosExport);
         let wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Dividas");
         XLSX.writeFile(wb, `dividas_cartao_${new Date().toISOString().slice(0,10)}.xlsx`);
     };
     
     document.getElementById('backupBtn').onclick = () => {
+        let dadosBackup = JSON.stringify({dividas, nextId}, null, 2);
+        let blob = new Blob([dadosBackup], {type: 'application/json'});
+        let url = URL.createObjectURL(blob);
         let a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([JSON.stringify({dividas, nextId})], {type:'application/json'}));
-        a.download = `backup_cartao.json`;
+        a.href = url;
+        a.download = `backup_cartao_${new Date().toISOString().slice(0,10)}.json`;
         a.click();
+        URL.revokeObjectURL(url);
     };
+    
     document.getElementById('restoreBtn').onclick = () => document.getElementById('restoreFile').click();
     document.getElementById('restoreFile').onchange = (e) => {
         let file = e.target.files[0];
@@ -767,8 +800,8 @@
                 nextId = data.nextId || 1;
                 salvarDados();
                 atualizarTela();
-                alert("Backup restaurado!");
-            } catch(e) { alert("Erro ao restaurar"); }
+                alert("✅ Backup restaurado com sucesso!");
+            } catch(e) { alert("❌ Erro ao restaurar backup: arquivo inválido"); }
         };
         reader.readAsText(file);
     };
@@ -796,6 +829,7 @@
     
     carregarDados();
     atualizarTela();
+    console.log("Sistema iniciado!");
 </script>
 </body>
 </html>
