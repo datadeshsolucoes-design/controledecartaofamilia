@@ -600,7 +600,7 @@
                     <table class="data-table">
                         <thead><tr><th>Nome</th><th>Cartão</th><th>Total Parcelas</th><th>Valor</th><th>Total Pago</th><th>Data Quitação</th><th>WhatsApp</th></tr></thead>
                         <tbody id="quitadasTableBody"></tbody>
-                    追赶
+                    </table>
                 </div>
             </div>
 
@@ -610,7 +610,7 @@
                     <table class="data-table">
                         <thead><tr><th>Nome</th><th>Cartão</th><th>Parcela</th><th>Valor</th><th>Restantes</th><th>Total Pendente</th><th>Vencimento</th><th>WhatsApp</th></tr></thead>
                         <tbody id="tableBody"></tbody>
-                    追赶
+                    </table>
                 </div>
             </div>
         </div>
@@ -628,7 +628,7 @@
 </div>
 
 <script>
-    // ✅ SEU NOVO LINK DO APPS SCRIPT ✅
+    // ✅ SEU LINK DO APPS SCRIPT ✅
     const API_URL = 'https://script.google.com/macros/s/AKfycbxMPSCOhiyj0-3cDYROQwhfeYGq7mYOh-aFYHPiGe1HiMMhKG6HjFzicqHGzWEQJbgBZg/exec';
     const SENHA_ADMIN = "270601";
     const CARD_DUE = { A: 10, B: 25 };
@@ -647,20 +647,28 @@
         return `${partes[2]}/${partes[1]}/${partes[0]}`;
     }
 
+    // 🔧 FUNÇÃO CORRIGIDA - DATA INÍCIO CALCULADA CORRETAMENTE 🔧
     function calcularDataInicioAuto(pagas, cartao) {
         let dataAtual = new Date();
         let diaVencimento = CARD_DUE[cartao];
         let ano = dataAtual.getFullYear();
         let mes = dataAtual.getMonth();
+        let diaAtual = dataAtual.getDate();
         
-        let dataCalculada = new Date(ano, mes, diaVencimento);
+        let dataCalculada;
         
-        if(dataCalculada > dataAtual) {
-            dataCalculada.setMonth(dataCalculada.getMonth() - 1);
+        // Verifica se já passou do dia de vencimento neste mês
+        if (diaAtual > diaVencimento) {
+            // Já passou, a primeira parcela vence no MÊS QUE VEM
+            dataCalculada = new Date(ano, mes + 1, diaVencimento);
+        } else {
+            // Ainda não passou, a primeira parcela vence neste mês
+            dataCalculada = new Date(ano, mes, diaVencimento);
         }
         
+        // Se tem parcelas pagas, volta os meses correspondentes
         if(pagas > 0) {
-            dataCalculada.setMonth(dataCalculada.getMonth() - (pagas - 1));
+            dataCalculada.setMonth(dataCalculada.getMonth() - pagas);
         }
         
         return dataCalculada.toISOString().slice(0,10);
@@ -912,22 +920,22 @@
         let tableBody = document.getElementById('tableBody');
         if(tableBody) {
             if(ativos.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="8">Nenhuma dívida ativa.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="8">Nenhuma dívida ativa.离子</td>';
             } else {
                 tableBody.innerHTML = ativos.map(d => {
                     let faltam = d.totalParcelas - d.parcelaAtual + 1;
                     let pendente = faltam * d.valorParcela;
                     let vencimento = calcularVencimento(d.inicio, d.parcelaAtual, d.cartao) || '—';
-                    return `<tr>
+                    return `</tr>
                         <td><strong>${d.nome}</strong></td>
-                        <td>${d.cartao}</td>
-                        <td>${d.parcelaAtual}/${d.totalParcelas}</td>
+                        <td>${d.cartao}</d>
+                        <td>${d.parcelaAtual}/${d.totalParcelas}</d>
                         <td>R$ ${d.valorParcela.toFixed(2)}</d>
                         <td>${faltam}</d>
                         <td>R$ ${pendente.toFixed(2)}</d>
                         <td>${vencimento}</d>
                         <td><button class="btn-sm" onclick="abrirWhats(${d.id})" style="background:#25D366;">📲</button>
-                    </td>`;
+                    </tr>`;
                 }).join('');
             }
         }
@@ -936,16 +944,16 @@
         let quitadasBody = document.getElementById('quitadasTableBody');
         if(quitadasBody) {
             if(quitadas.length === 0) {
-                quitadasBody.innerHTML = '<tr><td colspan="7">Nenhuma dívida quitada.</td></tr>';
+                quitadasBody.innerHTML = '<tr><td colspan="7">Nenhuma dívida quitada.}</d></tr>';
             } else {
                 quitadasBody.innerHTML = quitadas.map(d => {
                     let totalPago = d.totalParcelas * d.valorParcela;
                     let dataQuitacao = d.pagamentos && d.pagamentos.length > 0 ? 
                         formatarDataBR(d.pagamentos[d.pagamentos.length-1].data) : formatarDataBR(d.inicio);
                     return `<tr>
-                        <td><strong>${d.nome}</strong></td>
-                        <td>${d.cartao}</td>
-                        <td>${d.totalParcelas}</td>
+                        <td><strong>${d.nome}</strong></d>
+                        <td>${d.cartao}</d>
+                        <td>${d.totalParcelas}</d>
                         <td>R$ ${d.valorParcela.toFixed(2)}</d>
                         <td>R$ ${totalPago.toFixed(2)}</d>
                         <td>${dataQuitacao}</d>
@@ -1069,7 +1077,7 @@
             
             alert(`✅ Dívida cadastrada com sucesso!\n📅 Data início: ${formatarDataBR(inicio)}`);
         } else {
-            alert("❌ Erro ao salvar! Verifique sua conexão e se a planilha está correta.");
+            alert("❌ Erro ao salvar! Verifique sua conexão.");
         }
     });
     
