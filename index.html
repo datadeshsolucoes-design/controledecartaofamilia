@@ -2,93 +2,418 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle do Cartão - Dívidas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Controle do Cartão - Dashboard</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, 'Segoe UI', sans-serif; }
-        body { background: #f1f5f9; padding: 20px; font-size: 18px; }
-        .container { max-width: 1400px; margin: 0 auto; }
-        h1 { font-size: 2rem; color: #1e293b; margin-bottom: 20px; }
-        .filtros { display: flex; gap: 15px; flex-wrap: wrap; background: white; padding: 15px; border-radius: 20px; margin-bottom: 20px; align-items: center; }
-        .filtros input, .filtros select { padding: 10px; border-radius: 12px; border: 1px solid #ccc; font-size: 1rem; }
-        .btn-limpar { background: #64748b; }
-        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 15px; margin-bottom: 25px; }
-        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .card h3 { font-size: 0.9rem; color: #555; }
-        .card .valor { font-size: 1.8rem; font-weight: bold; color: #3b82f6; }
-        button { background: #3b82f6; color: white; border: none; padding: 10px 18px; border-radius: 30px; font-size: 0.9rem; cursor: pointer; margin-top: 10px; }
-        button:hover { background: #2563eb; }
-        table { width: 100%; background: white; border-radius: 20px; border-collapse: collapse; overflow: hidden; margin-top: 20px; }
-        th { background: #3b82f6; color: white; padding: 12px; text-align: left; font-size: 1rem; }
-        td { padding: 10px; border-bottom: 1px solid #e2e8f0; }
-        .divida-card { background: white; border-radius: 16px; padding: 15px; margin-bottom: 12px; border-left: 5px solid #3b82f6; }
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: white; padding: 25px; border-radius: 24px; width: 90%; max-width: 400px; }
-        .modal-content input, .modal-content textarea { width: 100%; padding: 12px; margin: 10px 0; border-radius: 12px; border: 1px solid #ccc; font-size: 1rem; }
-        .hidden { display: none; }
-        @media (max-width: 700px) { body { padding: 12px; font-size: 16px; } }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Inter', 'Helvetica Neue', sans-serif;
+            transition: background 0.3s ease, color 0.2s ease, border-color 0.2s;
+        }
+
+        :root {
+            --bg: #f4f7fc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --text-light: #475569;
+            --border: #e2e8f0;
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --purple: #8b5cf6;
+            --shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.02);
+        }
+
+        body.dark {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f1f5f9;
+            --text-light: #94a3b8;
+            --border: #334155;
+            --shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            font-size: 18px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            gap: 15px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .theme-toggle {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 60px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .controls-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            background: var(--card);
+            padding: 15px 20px;
+            border-radius: 24px;
+            margin-bottom: 25px;
+            border: 1px solid var(--border);
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg);
+            padding: 5px 12px;
+            border-radius: 40px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        select, input {
+            padding: 8px 12px;
+            border-radius: 40px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .stat-card h3 {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .form-panel {
+            background: var(--card);
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+            display: none;
+        }
+
+        .form-panel.active {
+            display: block;
+        }
+
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-light);
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-danger { background: var(--danger); }
+        .btn-warning { background: var(--warning); }
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; width: auto; }
+
+        .divida-card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border-left: 5px solid var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .divida-header {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .badge {
+            background: var(--bg);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: var(--border);
+            border-radius: 10px;
+            margin: 12px 0;
+        }
+
+        .progress-fill {
+            background: var(--success);
+            height: 100%;
+            border-radius: 10px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card);
+            border-radius: 20px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .data-table th {
+            background: var(--primary);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .data-table td {
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--card);
+            padding: 25px;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 700px) {
+            body { padding: 12px; font-size: 16px; }
+            .stat-card .value { font-size: 1.5rem; }
+        }
     </style>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="container">
-    <h1>💳 Controle do Cartão - Dívidas</h1>
-
-    <!-- FILTROS -->
-    <div class="filtros">
-        <input type="text" id="filtroNome" placeholder="🔍 Filtrar por nome">
-        <select id="filtroCartao">
-            <option value="all">Ambos cartões</option>
-            <option value="A">Cartão A (dia 10)</option>
-            <option value="B">Cartão B (dia 25)</option>
-        </select>
-        <button id="btnLimparFiltros" class="btn-limpar">🧹 Limpar filtros</button>
+    <div class="header">
+        <h1>💳 Controle do Cartão</h1>
+        <button class="theme-toggle" id="themeToggle">🌙 Modo escuro</button>
     </div>
 
-    <!-- CARDS RESUMO -->
-    <div class="cards" id="cards"></div>
-
-    <!-- BOTÕES PRINCIPAIS -->
-    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
-        <button id="btnNovo">➕ Nova dívida</button>
-        <button id="btnPagar">💰 Pagar parcela</button>
+    <!-- Filtros -->
+    <div class="controls-bar">
+        <div class="filter-group"><label>📅 Mês referência:</label><input type="month" id="mesReferencia"></div>
+        <div class="filter-group"><label>🔍 Nome:</label><input type="text" id="filtroNome" placeholder="Digite o nome"></div>
+        <div class="filter-group"><label>💳 Cartão:</label><select id="filtroCartao"><option value="all">Ambos</option><option value="A">Cartão A (dia 10)</option><option value="B">Cartão B (dia 25)</option></select></div>
+        <button id="btnLimparFiltros" style="background:var(--text-light); width:auto;">🧹 Limpar</button>
     </div>
 
-    <!-- FORMULÁRIO NOVA DÍVIDA -->
-    <div id="formNovo" style="background:white; padding:20px; border-radius:20px; margin-bottom:20px; display:none;">
-        <h3>➕ Nova dívida no cartão</h3>
-        <input type="text" id="nome" placeholder="Nome da pessoa" style="width:100%; padding:12px; margin:8px 0; border-radius:12px; border:1px solid #ccc;">
-        <input type="text" id="telefone" placeholder="WhatsApp (ex: 11999999999)" style="width:100%; padding:12px; margin:8px 0; border-radius:12px; border:1px solid #ccc;">
-        <input type="number" id="parcelaValor" placeholder="Valor da parcela (R$)" style="width:100%; padding:12px; margin:8px 0; border-radius:12px; border:1px solid #ccc;">
-        <input type="number" id="totalParcelas" placeholder="Total de parcelas" style="width:100%; padding:12px; margin:8px 0; border-radius:12px; border:1px solid #ccc;">
-        <select id="cartao" style="width:100%; padding:12px; margin:8px 0; border-radius:12px;">
-            <option value="A">Cartão A (vence dia 10)</option>
-            <option value="B">Cartão B (vence dia 25)</option>
-        </select>
-        <input type="date" id="dataInicio" style="width:100%; padding:12px; margin:8px 0; border-radius:12px;">
-        <button id="salvarNovo" style="background:#10b981;">✅ Salvar dívida</button>
-        <button id="cancelarNovo" style="background:#94a3b8;">Cancelar</button>
+    <!-- Cards -->
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <!-- Abas -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="newLoan">➕ Nova dívida</button>
+        <button class="tab-btn" data-tab="pay">💰 Pagar parcela</button>
+        <button class="tab-btn" data-tab="edit">✏️ Editar/Excluir</button>
+        <button class="tab-btn" data-tab="backup">💾 Backup/Excel</button>
     </div>
 
-    <!-- FORMULÁRIO PAGAR PARCELA -->
-    <div id="formPagar" style="background:white; padding:20px; border-radius:20px; margin-bottom:20px; display:none;">
+    <!-- NOVA DÍVIDA -->
+    <div id="newLoan" class="form-panel active">
+        <h3>➕ Cadastrar nova dívida no cartão</h3>
+        <div class="form-row">
+            <div class="form-group"><label>Nome completo</label><input type="text" id="newName" placeholder="Ex: Ana"></div>
+            <div class="form-group"><label>WhatsApp (com DDD)</label><input type="text" id="newWhats" placeholder="11999999999"></div>
+            <div class="form-group"><label>Valor da parcela (R$)</label><input type="number" id="newInstallment" placeholder="275"></div>
+            <div class="form-group"><label>Total de parcelas</label><input type="number" id="newTotal" placeholder="10"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>Parcelas já pagas</label><input type="number" id="newPaid" placeholder="0" value="0"></div>
+            <div class="form-group"><label>Cartão</label><select id="newCard"><option value="A">Cartão A (vence dia 10)</option><option value="B">Cartão B (vence dia 25)</option></select></div>
+            <div class="form-group"><label>Data início</label><input type="date" id="newDate"></div>
+        </div>
+        <button id="createLoanBtn">✅ Criar dívida</button>
+    </div>
+
+    <!-- PAGAR PARCELA -->
+    <div id="pay" class="form-panel">
         <h3>💰 Pagar parcela</h3>
-        <select id="selectPagar" style="width:100%; padding:12px; margin:8px 0; border-radius:12px;"></select>
-        <input type="date" id="dataPagamento" style="width:100%; padding:12px; margin:8px 0; border-radius:12px;">
-        <button id="confirmarPagamento" style="background:#10b981;">✅ Confirmar pagamento</button>
-        <button id="cancelarPagar" style="background:#94a3b8;">Cancelar</button>
+        <div class="form-row">
+            <div class="form-group"><label>Selecione a dívida</label><select id="payLoanSelect"></select></div>
+            <div class="form-group"><label>Data do pagamento</label><input type="date" id="payDate"></div>
+        </div>
+        <button id="payInstallmentBtn">✅ Confirmar pagamento</button>
+    </div>
+
+    <!-- EDITAR/EXCLUIR (COM SENHA) -->
+    <div id="edit" class="form-panel">
+        <h3>✏️ Editar ou excluir dívida</h3>
+        <div class="form-row">
+            <div class="form-group"><label>Dívida</label><select id="editLoanSelect"></select></div>
+            <div class="form-group"><label>Valor parcela (R$)</label><input type="number" id="editInstallmentValue"></div>
+            <div class="form-group"><label>Total parcelas</label><input type="number" id="editTotalParcels"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>Senha</label><input type="password" id="editSenha" placeholder="Digite a senha"></div>
+        </div>
+        <div class="form-row">
+            <button id="saveEditBtn">💾 Salvar alterações</button>
+            <button id="deleteLoanBtn" class="btn-danger">🗑️ Excluir dívida</button>
+        </div>
+    </div>
+
+    <!-- BACKUP -->
+    <div id="backup" class="form-panel">
+        <h3>💾 Exportar / Importar dados</h3>
+        <div class="form-row">
+            <button id="exportExcelBtn">📊 Baixar Excel</button>
+            <button id="backupBtn">📁 Backup (JSON)</button>
+            <input type="file" id="restoreFile" accept=".json" style="display:none">
+            <button id="restoreBtn">🔄 Restaurar backup</button>
+        </div>
     </div>
 
     <!-- LISTA DE DÍVIDAS ATIVAS -->
-    <h2>📋 Dívidas ativas no cartão</h2>
-    <div id="listaDividas"></div>
+    <h2>📋 Dívidas ativas</h2>
+    <div id="activeLoansList"></div>
+
+    <h2>✅ Histórico (Quitadas)</h2>
+    <div id="paidLoansList"></div>
 
     <!-- TABELA COMPLETA -->
     <h2>📊 Tabela completa de todas as dívidas</h2>
-    <table id="tabelaCompleta">
-        <thead><tr><th>Nome</th><th>Cartão</th><th>Parcela</th><th>Valor parcela</th><th>Faltam</th><th>Total pendente</th><th>WhatsApp</th></tr>
-        </thead>
-        <tbody id="tabelaBody"></tbody>
-    </table>
+    <div class="table-container">
+        <table class="data-table" id="fullTable">
+            <thead><tr><th>Nome</th><th>Cartão</th><th>Parcela</th><th>Valor parcela</th><th>Restantes</th><th>Total pendente</th><th>WhatsApp</th></tr></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
 </div>
 
 <!-- MODAL WHATSAPP -->
@@ -97,253 +422,287 @@
         <h3>📲 Enviar cobrança via WhatsApp</h3>
         <input type="text" id="whatsNumero" placeholder="Número com DDD (ex: 11999999999)">
         <textarea id="whatsMensagem" rows="4" placeholder="Mensagem personalizada..."></textarea>
-        <button id="btnEnviarWhats" style="background:#25D366;">📲 Enviar WhatsApp</button>
-        <button id="btnFecharWhats">Cancelar</button>
+        <button id="btnEnviarWhats" style="background:#25D366;">📲 Enviar</button>
+        <button id="btnFecharWhats" style="background:var(--text-light);">Cancelar</button>
     </div>
 </div>
 
 <script>
-    let dividas = []; // mudamos o nome de emprestimos para dividas
-    let whatsCallback = null;
+    const SENHA = "270601";
+    let dividas = [];
+    let nextId = 1;
+    let currentMonth = new Date().toISOString().slice(0,7);
+    const CARD_DUE = { A: 10, B: 25 };
 
-    // Salvar no localStorage
-    function salvarDados() {
-        localStorage.setItem('dividasCartao', JSON.stringify(dividas));
-    }
-
-    // Carregar dados (sem exemplos automáticos)
-    function carregarDados() {
-        let dados = localStorage.getItem('dividasCartao');
-        if(dados && dados !== '[]') {
-            dividas = JSON.parse(dados);
-        } else {
-            dividas = []; // começa vazio, sem exemplos
-        }
-    }
-
-    // Formatar data brasileira
-    function formatarDataBrasil(dataISO) {
-        if(!dataISO) return '';
-        let partes = dataISO.split('-');
-        if(partes.length !== 3) return dataISO;
-        return `${partes[2]}/${partes[1]}/${partes[0]}`;
-    }
-
-    // Calcular próxima data de vencimento
     function calcularVencimento(inicio, parcelaAtual, cartao) {
-        if(!inicio) return 'não definida';
+        if(!inicio) return null;
         let [ano, mes, dia] = inicio.split('-').map(Number);
-        let diaVenc = cartao === 'A' ? 10 : 25;
+        let diaVenc = CARD_DUE[cartao];
         let mesVenc = mes + (parcelaAtual - 1);
         let anoVenc = ano;
         while(mesVenc > 12) { mesVenc -= 12; anoVenc++; }
-        return `${String(diaVenc).padStart(2,'0')}/${String(mesVenc).padStart(2,'0')}/${anoVenc}`;
+        let ultimoDia = new Date(anoVenc, mesVenc, 0).getDate();
+        let finalDia = Math.min(diaVenc, ultimoDia);
+        return `${String(finalDia).padStart(2,'0')}/${String(mesVenc).padStart(2,'0')}/${anoVenc}`;
     }
 
-    // Atualizar toda a tela
-    function atualizarTela() {
-        let nomeFiltro = document.getElementById('filtroNome').value.toLowerCase();
-        let cartaoFiltro = document.getElementById('filtroCartao').value;
-        
+    function salvarDados() { localStorage.setItem('dividas_cartao', JSON.stringify(dividas)); localStorage.setItem('dividas_nextId', nextId); }
+    
+    function carregarDados() {
+        let stored = localStorage.getItem('dividas_cartao');
+        let storedId = localStorage.getItem('dividas_nextId');
+        if(stored) dividas = JSON.parse(stored);
+        if(storedId) nextId = parseInt(storedId);
+        if(!dividas.length) dividas = [];
+    }
+
+    function getFiltered() {
         let ativos = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
-        
-        if(nomeFiltro) ativos = ativos.filter(d => d.nome.toLowerCase().includes(nomeFiltro));
-        if(cartaoFiltro !== 'all') ativos = ativos.filter(d => d.cartao === cartaoFiltro);
-        
-        // Cards
+        let nome = document.getElementById('filtroNome').value.toLowerCase();
+        let cartao = document.getElementById('filtroCartao').value;
+        if(nome) ativos = ativos.filter(d => d.nome.toLowerCase().includes(nome));
+        if(cartao !== 'all') ativos = ativos.filter(d => d.cartao === cartao);
+        return ativos;
+    }
+
+    function getPaymentsInMonth(month) {
+        let total = 0;
+        dividas.forEach(d => {
+            d.pagamentos?.forEach(p => { if(p.data.startsWith(month)) total += d.valorParcela; });
+        });
+        return total;
+    }
+
+    function getDueInMonth(month) {
+        let total = 0;
+        dividas.forEach(d => {
+            if(d.parcelaAtual > d.totalParcelas) return;
+            for(let i = d.parcelaAtual; i <= d.totalParcelas; i++) {
+                let [dia, mes, ano] = calcularVencimento(d.inicio, i, d.cartao)?.split('/') || [];
+                if(mes && ano) {
+                    let dueStr = `${ano}-${mes.padStart(2,'0')}`;
+                    if(dueStr === month) total += d.valorParcela;
+                }
+            }
+        });
+        return total;
+    }
+
+    function atualizarTela() {
+        let ativos = getFiltered();
         let totalDivida = ativos.reduce((s, d) => s + (d.totalParcelas - d.parcelaAtual + 1) * d.valorParcela, 0);
-        document.getElementById('cards').innerHTML = `
-            <div class="card"><h3>💰 Dívida total no cartão</h3><div class="valor">R$ ${totalDivida.toFixed(2)}</div></div>
-            <div class="card"><h3>📦 Dívidas ativas</h3><div class="valor">${ativos.length}</div></div>
+        let mesRef = document.getElementById('mesReferencia').value || currentMonth;
+        let pagoMes = getPaymentsInMonth(mesRef);
+        let aPagarMes = getDueInMonth(mesRef);
+        
+        document.getElementById('statsGrid').innerHTML = `
+            <div class="stat-card"><h3>💰 Dívida total</h3><div class="value">R$ ${totalDivida.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
+            <div class="stat-card"><h3>📆 A pagar em ${mesRef}</h3><div class="value">R$ ${aPagarMes.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
+            <div class="stat-card"><h3>✅ Pago em ${mesRef}</h3><div class="value">R$ ${pagoMes.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
+            <div class="stat-card"><h3>📦 Dívidas ativas</h3><div class="value">${ativos.length}</div></div>
         `;
         
-        // Lista de dívidas (cards)
-        let html = '';
-        for(let d of ativos) {
+        let activeDiv = document.getElementById('activeLoansList');
+        activeDiv.innerHTML = ativos.map(d => {
             let faltam = d.totalParcelas - d.parcelaAtual + 1;
             let pendente = faltam * d.valorParcela;
-            let vencimento = calcularVencimento(d.inicio, d.parcelaAtual, d.cartao);
-            html += `
+            let vencimento = calcularVencimento(d.inicio, d.parcelaAtual, d.cartao) || '—';
+            let percent = ((d.parcelaAtual-1)/d.totalParcelas)*100;
+            return `
                 <div class="divida-card">
-                    <strong>${d.nome}</strong> (Cartão ${d.cartao} - vence dia ${d.cartao === 'A' ? '10' : '25'})<br>
-                    📆 ${d.parcelaAtual}/${d.totalParcelas} parcelas - R$ ${d.valorParcela.toFixed(2)}/mês<br>
-                    🔜 Próximo vencimento: ${vencimento}<br>
-                    💵 Faltam ${faltam}x = R$ ${pendente.toFixed(2)}<br>
-                    📞 Telefone: ${d.telefone || 'não cadastrado'}<br>
-                    <button onclick="abrirWhats(${d.id})">📲 Cobrar WhatsApp</button>
-                    <button onclick="pagarParcela(${d.id})">💰 Pagar parcela</button>
-                    <button onclick="excluirDivida(${d.id})" style="background:#ef4444;">🗑️ Excluir</button>
+                    <div class="divida-header"><span>${d.nome} (Cartão ${d.cartao})</span><span class="badge">${d.parcelaAtual}/${d.totalParcelas}</span></div>
+                    <div>💰 R$ ${d.valorParcela.toFixed(2)} / parcela</div>
+                    <div>📅 Início: ${d.inicio} | 🔜 Vencimento: ${vencimento}</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
+                    <div><strong>Faltam: ${faltam}x R$ ${d.valorParcela.toFixed(2)} = R$ ${pendente.toFixed(2)}</strong></div>
+                    <div>📞 WhatsApp: ${d.whats || 'não cadastrado'}</div>
+                    <div class="actions" style="display:flex; gap:8px; margin-top:10px;">
+                        <button class="btn-sm" onclick="abrirWhats(${d.id})">📲 Cobrar WhatsApp</button>
+                    </div>
                 </div>
             `;
-        }
-        document.getElementById('listaDividas').innerHTML = html || '<p>Nenhuma dívida ativa.</p>';
+        }).join('');
         
-        // Tabelona
-        let tabelaHtml = '';
-        for(let d of ativos) {
+        let paidDiv = document.getElementById('paidLoansList');
+        paidDiv.innerHTML = dividas.filter(d => d.parcelaAtual > d.totalParcelas).map(d => `
+            <div class="divida-card" style="border-left-color:var(--success); opacity:0.8">
+                <div><strong>${d.nome}</strong> (QUITADA) - Cartão ${d.cartao} - ${d.totalParcelas}x R$ ${d.valorParcela}</div>
+                <div>Início: ${d.inicio}</div>
+            </div>
+        `).join('');
+        
+        let tableBody = document.getElementById('tableBody');
+        tableBody.innerHTML = ativos.map(d => {
             let faltam = d.totalParcelas - d.parcelaAtual + 1;
             let pendente = faltam * d.valorParcela;
-            tabelaHtml += `
-                <tr>
-                    <td><strong>${d.nome}</strong></td>
-                    <td>${d.cartao}</td>
-                    <td>${d.parcelaAtual}/${d.totalParcelas}</td>
-                    <td>R$ ${d.valorParcela.toFixed(2)}</td>
-                    <td>${faltam}</td>
-                    <td>R$ ${pendente.toFixed(2)}</td>
-                    <td><button onclick="abrirWhats(${d.id})" style="background:#25D366; padding:6px 12px;">📲 WhatsApp</button></td>
-                </tr>
-            `;
-        }
-        document.getElementById('tabelaBody').innerHTML = tabelaHtml;
+            return `<tr><td><strong>${d.nome}</strong></td><td>${d.cartao}</td><td>${d.parcelaAtual}/${d.totalParcelas}</td><td>R$ ${d.valorParcela.toFixed(2)}</td><td>${faltam}</td><td>R$ ${pendente.toFixed(2)}</td><td><button class="btn-sm" onclick="abrirWhats(${d.id})" style="background:#25D366;">📲</button></td></tr>`;
+        }).join('');
         
-        // Atualizar select de pagamento
-        let select = document.getElementById('selectPagar');
+        let select = document.getElementById('payLoanSelect');
         select.innerHTML = ativos.map(d => `<option value="${d.id}">${d.nome} - ${d.parcelaAtual}/${d.totalParcelas} - R$ ${d.valorParcela}</option>`).join('');
+        
+        let editSelect = document.getElementById('editLoanSelect');
+        let todasDividas = dividas.filter(d => true);
+        editSelect.innerHTML = todasDividas.map(d => `<option value="${d.id}">${d.nome} - ${d.parcelaAtual}/${d.totalParcelas} - ${d.parcelaAtual > d.totalParcelas ? 'QUITADA' : 'ATIVA'}</option>`).join('');
+        let selected = dividas.find(d => d.id == editSelect.value);
+        if(selected) {
+            document.getElementById('editInstallmentValue').value = selected.valorParcela;
+            document.getElementById('editTotalParcels').value = selected.totalParcelas;
+        }
     }
 
-    // Pagar parcela
-    window.pagarParcela = function(id) {
-        let divida = dividas.find(d => d.id === id);
-        if(divida && divida.parcelaAtual <= divida.totalParcelas) {
-            divida.parcelaAtual++;
-            if(!divida.pagamentos) divida.pagamentos = [];
-            let hoje = new Date().toISOString().slice(0,10);
-            divida.pagamentos.push({ data: hoje, parcela: divida.parcelaAtual-1 });
-            salvarDados();
-            atualizarTela();
-            alert(`✅ Parcela ${divida.parcelaAtual-1} paga com sucesso!`);
-        }
-    };
-    
-    // Excluir dívida
-    window.excluirDivida = function(id) {
-        if(confirm("Tem certeza que quer excluir esta dívida permanentemente?")) {
-            dividas = dividas.filter(d => d.id !== id);
-            salvarDados();
-            atualizarTela();
-        }
-    };
-    
-    // Abrir modal WhatsApp com dados da dívida
     window.abrirWhats = function(id) {
         let divida = dividas.find(d => d.id === id);
         if(!divida) return;
-        
         let faltam = divida.totalParcelas - divida.parcelaAtual + 1;
         let totalPendente = faltam * divida.valorParcela;
-        let vencimento = calcularVencimento(divida.inicio, divida.parcelaAtual, divida.cartao);
-        
-        let mensagemPadrao = `Olá ${divida.nome}! 🏦\n\n`
-            + `Situação da sua dívida no cartão:\n`
-            + `📌 Parcela: ${divida.parcelaAtual}/${divida.totalParcelas}\n`
-            + `💰 Valor da parcela: R$ ${divida.valorParcela.toFixed(2)}\n`
-            + `📅 Próximo vencimento: ${vencimento}\n`
-            + `💵 Total pendente: R$ ${totalPendente.toFixed(2)}\n\n`
-            + `Qualquer dúvida, entre em contato!`;
-        
-        document.getElementById('whatsNumero').value = divida.telefone || '';
-        document.getElementById('whatsMensagem').value = mensagemPadrao;
+        let vencimento = calcularVencimento(divida.inicio, divida.parcelaAtual, divida.cartao) || 'em breve';
+        let msg = `Olá ${divida.nome}! 🏦\n\nSituação da sua dívida no cartão:\n📌 Parcela: ${divida.parcelaAtual}/${divida.totalParcelas}\n💰 Valor: R$ ${divida.valorParcela.toFixed(2)}\n📅 Próximo vencimento: ${vencimento}\n💵 Total pendente: R$ ${totalPendente.toFixed(2)}\n\nQualquer dúvida, entre em contato!`;
+        document.getElementById('whatsNumero').value = divida.whats || '';
+        document.getElementById('whatsMensagem').value = msg;
         document.getElementById('modalWhats').classList.remove('hidden');
-        
-        whatsCallback = () => {
-            let numero = document.getElementById('whatsNumero').value.replace(/\D/g, '');
-            let mensagem = encodeURIComponent(document.getElementById('whatsMensagem').value);
-            if(numero) {
-                window.open(`https://wa.me/55${numero}?text=${mensagem}`, '_blank');
-            } else {
-                alert("Por favor, informe o número do WhatsApp");
-            }
-            document.getElementById('modalWhats').classList.add('hidden');
-        };
+        window.whatsId = id;
     };
     
-    // Eventos dos botões do modal
-    document.getElementById('btnEnviarWhats').onclick = () => { if(whatsCallback) whatsCallback(); };
-    document.getElementById('btnFecharWhats').onclick = () => { document.getElementById('modalWhats').classList.add('hidden'); };
-    
-    // Eventos do formulário
-    document.getElementById('btnNovo').onclick = () => { 
-        document.getElementById('formNovo').style.display = 'block'; 
-        document.getElementById('formPagar').style.display = 'none'; 
+    document.getElementById('btnEnviarWhats').onclick = () => {
+        let numero = document.getElementById('whatsNumero').value.replace(/\D/g, '');
+        let mensagem = encodeURIComponent(document.getElementById('whatsMensagem').value);
+        if(numero) window.open(`https://wa.me/55${numero}?text=${mensagem}`, '_blank');
+        else alert("Informe o número do WhatsApp");
+        document.getElementById('modalWhats').classList.add('hidden');
     };
-    document.getElementById('btnPagar').onclick = () => { 
-        document.getElementById('formPagar').style.display = 'block'; 
-        document.getElementById('formNovo').style.display = 'none'; 
-    };
-    document.getElementById('cancelarNovo').onclick = () => { document.getElementById('formNovo').style.display = 'none'; };
-    document.getElementById('cancelarPagar').onclick = () => { document.getElementById('formPagar').style.display = 'none'; };
+    document.getElementById('btnFecharWhats').onclick = () => document.getElementById('modalWhats').classList.add('hidden');
     
-    document.getElementById('salvarNovo').onclick = () => {
-        let nome = document.getElementById('nome').value.trim();
-        let telefone = document.getElementById('telefone').value.trim();
-        let valor = parseFloat(document.getElementById('parcelaValor').value);
-        let total = parseInt(document.getElementById('totalParcelas').value);
-        let cartao = document.getElementById('cartao').value;
-        let inicio = document.getElementById('dataInicio').value;
-        
-        if(!nome || isNaN(valor) || isNaN(total) || valor<=0 || total<=0) { 
-            alert("Preencha todos os campos corretamente"); 
-            return; 
-        }
+    document.getElementById('createLoanBtn').onclick = () => {
+        let nome = document.getElementById('newName').value.trim();
+        let whats = document.getElementById('newWhats').value.trim();
+        let valor = parseFloat(document.getElementById('newInstallment').value);
+        let total = parseInt(document.getElementById('newTotal').value);
+        let pagas = parseInt(document.getElementById('newPaid').value) || 0;
+        let cartao = document.getElementById('newCard').value;
+        let inicio = document.getElementById('newDate').value;
+        if(!nome || isNaN(valor) || isNaN(total) || valor<=0 || total<=0) { alert("Preencha todos os campos"); return; }
+        if(pagas >= total) { alert("Parcelas pagas não pode ser maior ou igual ao total"); return; }
         if(!inicio) inicio = new Date().toISOString().slice(0,10);
-        
-        let novaDivida = {
-            id: Date.now(),
-            nome: nome,
-            telefone: telefone,
-            valorParcela: valor,
-            totalParcelas: total,
-            parcelaAtual: 1,
-            cartao: cartao,
-            inicio: inicio,
-            pagamentos: []
-        };
-        
-        dividas.push(novaDivida);
+        dividas.push({ id: nextId++, nome, whats, valorParcela: valor, totalParcelas: total, parcelaAtual: pagas+1, cartao, inicio, pagamentos: [] });
         salvarDados();
         atualizarTela();
-        
-        // Limpar formulário
-        document.getElementById('nome').value = '';
-        document.getElementById('telefone').value = '';
-        document.getElementById('parcelaValor').value = '';
-        document.getElementById('totalParcelas').value = '';
-        document.getElementById('dataInicio').value = '';
-        document.getElementById('formNovo').style.display = 'none';
-        alert("✅ Dívida cadastrada com sucesso!");
+        document.getElementById('newName').value = '';
+        document.getElementById('newWhats').value = '';
+        document.getElementById('newInstallment').value = '';
+        document.getElementById('newTotal').value = '';
+        document.getElementById('newPaid').value = '0';
+        document.getElementById('newDate').value = '';
+        alert("Dívida cadastrada!");
     };
     
-    document.getElementById('confirmarPagamento').onclick = () => {
-        let id = parseInt(document.getElementById('selectPagar').value);
+    document.getElementById('payInstallmentBtn').onclick = () => {
+        let id = parseInt(document.getElementById('payLoanSelect').value);
+        let data = document.getElementById('payDate').value;
         let divida = dividas.find(d => d.id === id);
-        if(divida && divida.parcelaAtual <= divida.totalParcelas) {
-            divida.parcelaAtual++;
-            if(!divida.pagamentos) divida.pagamentos = [];
-            let dataPag = document.getElementById('dataPagamento').value || new Date().toISOString().slice(0,10);
-            divida.pagamentos.push({ data: dataPag, parcela: divida.parcelaAtual-1 });
+        if(!divida || divida.parcelaAtual > divida.totalParcelas) { alert("Dívida já quitada"); return; }
+        if(!data) { alert("Informe a data"); return; }
+        if(!divida.pagamentos) divida.pagamentos = [];
+        divida.pagamentos.push({ data, parcela: divida.parcelaAtual });
+        divida.parcelaAtual++;
+        salvarDados();
+        atualizarTela();
+        alert("Pagamento registrado!");
+        document.getElementById('payDate').value = '';
+    };
+    
+    function verificarSenha() {
+        let senha = document.getElementById('editSenha').value;
+        if(senha !== SENHA) { alert("Senha incorreta!"); return false; }
+        return true;
+    }
+    
+    document.getElementById('saveEditBtn').onclick = () => {
+        if(!verificarSenha()) return;
+        let id = parseInt(document.getElementById('editLoanSelect').value);
+        let divida = dividas.find(d => d.id === id);
+        if(!divida) return;
+        let novoValor = parseFloat(document.getElementById('editInstallmentValue').value);
+        let novoTotal = parseInt(document.getElementById('editTotalParcels').value);
+        if(isNaN(novoValor) || isNaN(novoTotal)) return;
+        divida.valorParcela = novoValor;
+        if(novoTotal < divida.parcelaAtual) divida.parcelaAtual = novoTotal;
+        divida.totalParcelas = novoTotal;
+        if(divida.parcelaAtual > divida.totalParcelas) divida.parcelaAtual = divida.totalParcelas + 1;
+        salvarDados();
+        atualizarTela();
+        alert("Dívida atualizada!");
+        document.getElementById('editSenha').value = '';
+    };
+    
+    document.getElementById('deleteLoanBtn').onclick = () => {
+        if(!verificarSenha()) return;
+        let id = parseInt(document.getElementById('editLoanSelect').value);
+        if(confirm("Excluir permanentemente esta dívida?")) {
+            dividas = dividas.filter(d => d.id !== id);
             salvarDados();
             atualizarTela();
-            alert("✅ Pagamento registrado!");
-            document.getElementById('formPagar').style.display = 'none';
-            document.getElementById('dataPagamento').value = '';
-        } else { 
-            alert("Erro ao registrar pagamento"); 
+            alert("Dívida excluída!");
+            document.getElementById('editSenha').value = '';
         }
     };
     
-    // Limpar filtros
     document.getElementById('btnLimparFiltros').onclick = () => {
         document.getElementById('filtroNome').value = '';
         document.getElementById('filtroCartao').value = 'all';
+        document.getElementById('mesReferencia').value = '';
         atualizarTela();
     };
     
-    // Eventos de filtro
+    document.getElementById('exportExcelBtn').onclick = () => {
+        let ws = XLSX.utils.json_to_sheet(dividas.map(d => ({ Nome: d.nome, WhatsApp: d.whats, ValorParcela: d.valorParcela, TotalParcelas: d.totalParcelas, ParcelaAtual: d.parcelaAtual, Status: d.parcelaAtual > d.totalParcelas ? 'Quitado' : 'Ativo', Cartão: d.cartao, Início: d.inicio })));
+        let wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Dividas");
+        XLSX.writeFile(wb, `dividas_cartao_${new Date().toISOString().slice(0,10)}.xlsx`);
+    };
+    
+    document.getElementById('backupBtn').onclick = () => {
+        let a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([JSON.stringify({dividas, nextId})], {type:'application/json'}));
+        a.download = `backup_cartao.json`;
+        a.click();
+    };
+    document.getElementById('restoreBtn').onclick = () => document.getElementById('restoreFile').click();
+    document.getElementById('restoreFile').onchange = (e) => {
+        let file = e.target.files[0];
+        if(!file) return;
+        let reader = new FileReader();
+        reader.onload = ev => {
+            try {
+                let data = JSON.parse(ev.target.result);
+                dividas = data.dividas || [];
+                nextId = data.nextId || 1;
+                salvarDados();
+                atualizarTela();
+                alert("Backup restaurado!");
+            } catch(e) { alert("Erro ao restaurar"); }
+        };
+        reader.readAsText(file);
+    };
+    
+    document.getElementById('themeToggle').onclick = () => {
+        document.body.classList.toggle('dark');
+        document.getElementById('themeToggle').innerText = document.body.classList.contains('dark') ? '☀️ Modo claro' : '🌙 Modo escuro';
+    };
+    
+    document.querySelectorAll('.tab-btn[data-tab]').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(btn.getAttribute('data-tab')).classList.add('active');
+        };
+    });
+    
     document.getElementById('filtroNome').addEventListener('input', () => atualizarTela());
     document.getElementById('filtroCartao').addEventListener('change', () => atualizarTela());
+    document.getElementById('mesReferencia').addEventListener('change', () => atualizarTela());
     
-    // Inicialização
     carregarDados();
     atualizarTela();
 </script>
