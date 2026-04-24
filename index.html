@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Controle do Cartão - Dashboard</title>
+    <!-- Chart.js CDN para os gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -89,6 +91,22 @@
             border-radius: 24px;
             margin-bottom: 25px;
             border: 1px solid var(--border);
+            position: relative;
+        }
+        
+        /* Identificação da caixa de filtros */
+        .filters-identifier {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--primary);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 2px 12px;
+            border-radius: 20px;
+            pointer-events: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         .filter-group {
@@ -142,7 +160,7 @@
             font-weight: 700;
         }
 
-        /* BOTÕES DE AÇÃO (Nova dívida, Pagar, Editar, Backup) - LADO A LADO */
+        /* BOTÕES DE AÇÃO */
         .action-buttons {
             display: flex;
             flex-wrap: wrap;
@@ -233,7 +251,7 @@
         .btn-warning { background: var(--warning); }
         .btn-sm { padding: 6px 12px; font-size: 0.8rem; width: auto; }
 
-        /* ABAS DE FILTRO (Todos / Cartão A / Cartão B) - LADO A LADO */
+        /* ABAS - Nova ordem: Cartão A, Cartão B, Todos os cartões */
         .filter-tabs {
             display: flex;
             flex-wrap: wrap;
@@ -264,6 +282,17 @@
             background: var(--primary);
             color: white;
         }
+
+        /* Gráfico */
+        .chart-container {
+            background: var(--card);
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+        canvas { max-height: 400px; width: 100%; }
 
         /* CARDS DE DÍVIDA */
         .divida-card {
@@ -367,14 +396,15 @@
 </head>
 <body>
 <div class="container">
-    <!-- CABEÇALHO COM BOTÃO DE TEMA NO CANTO -->
+    <!-- CABEÇALHO COM BOTÃO DE TEMA -->
     <div class="header">
         <h1>💳 Controle do Cartão</h1>
         <button class="theme-toggle" id="themeToggle">🌙 Modo escuro</button>
     </div>
 
-    <!-- FILTROS (Mês e Nome) -->
+    <!-- FILTROS COM IDENTIFICAÇÃO -->
     <div class="controls-bar">
+        <div class="filters-identifier">🔍 ÁREA DE FILTROS</div>
         <div class="filter-group"><label>📅 Mês referência:</label><input type="month" id="mesReferencia"></div>
         <div class="filter-group"><label>🔍 Nome:</label><input type="text" id="filtroNome" placeholder="Digite o nome"></div>
         <button id="btnLimparFiltros" style="background:var(--text-light); width:auto;">🧹 Limpar</button>
@@ -383,7 +413,7 @@
     <!-- CARDS RESUMO -->
     <div class="stats-grid" id="statsGrid"></div>
 
-    <!-- BOTÕES DE AÇÃO (LADO A LADO) -->
+    <!-- BOTÕES DE AÇÃO -->
     <div class="action-buttons">
         <button class="action-btn active" data-acao="newLoan">➕ Nova dívida</button>
         <button class="action-btn" data-acao="pay">💰 Pagar parcela</button>
@@ -408,12 +438,15 @@
         <button id="createLoanBtn">✅ Criar dívida</button>
     </div>
 
-    <!-- FORMULÁRIO PAGAR PARCELA -->
+    <!-- FORMULÁRIO PAGAR PARCELA COM SENHA -->
     <div id="form-pay" class="form-panel">
         <h3>💰 Pagar parcela</h3>
         <div class="form-row">
             <div class="form-group"><label>Selecione a dívida</label><select id="payLoanSelect"></select></div>
             <div class="form-group"><label>Data do pagamento</label><input type="date" id="payDate"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>🔐 Senha de confirmação</label><input type="password" id="paySenha" placeholder="Digite a senha"></div>
         </div>
         <button id="payInstallmentBtn">✅ Confirmar pagamento</button>
     </div>
@@ -446,11 +479,23 @@
         </div>
     </div>
 
-    <!-- ABAS DE FILTRO (Todos / Cartão A / Cartão B) - LADO A LADO -->
+    <!-- ABAS: Ordem alterada: Cartão A, Cartão B, Todos os cartões -->
     <div class="filter-tabs">
-        <button class="filter-tab active" data-filtro="all">📋 Todos os cartões</button>
-        <button class="filter-tab" data-filtro="A">💳 Cartão A (dia 10)</button>
+        <button class="filter-tab active" data-filtro="A">💳 Cartão A (dia 10)</button>
         <button class="filter-tab" data-filtro="B">💳 Cartão B (dia 25)</button>
+        <button class="filter-tab" data-filtro="all">📋 Todos os cartões</button>
+    </div>
+
+    <!-- Nova Aba Gráficos -->
+    <div class="filter-tabs" style="margin-top: -10px; border-bottom: none;">
+        <button class="filter-tab" data-abagrafico="graficos" id="btnAbaGraficos">📈 Gráficos Evolução</button>
+    </div>
+
+    <!-- Container de Gráficos (inicialmente oculto) -->
+    <div id="graficosContainer" style="display: none;">
+        <div class="chart-container">
+            <canvas id="evolucaoChart"></canvas>
+        </div>
     </div>
 
     <!-- LISTA DE DÍVIDAS ATIVAS -->
@@ -486,7 +531,8 @@
     let dividas = [];
     let nextId = 1;
     let currentMonth = new Date().toISOString().slice(0,7);
-    let abaFiltroAtual = "all";
+    let abaFiltroAtual = "A"; // Começa em Cartão A conforme ordem
+    let chartInstance = null;
     const CARD_DUE = { A: 10, B: 25 };
 
     function calcularVencimento(inicio, parcelaAtual, cartao) {
@@ -511,7 +557,27 @@
         if(!dividas.length) dividas = [];
     }
 
+    // Aplica filtro de nome + aba (agora "all", "A", "B")
     function getFiltered() {
+        let ativos = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
+        let nome = document.getElementById('filtroNome').value.toLowerCase();
+        if(nome) ativos = ativos.filter(d => d.nome.toLowerCase().includes(nome));
+        // Filtro por cartão
+        if(abaFiltroAtual !== 'all') ativos = ativos.filter(d => d.cartao === abaFiltroAtual);
+        return ativos;
+    }
+    
+    // Filtro para quitadas seguindo mesma regra
+    function getQuitadasFiltradas() {
+        let quitadas = dividas.filter(d => d.parcelaAtual > d.totalParcelas);
+        let nome = document.getElementById('filtroNome').value.toLowerCase();
+        if(nome) quitadas = quitadas.filter(d => d.nome.toLowerCase().includes(nome));
+        if(abaFiltroAtual !== 'all') quitadas = quitadas.filter(d => d.cartao === abaFiltroAtual);
+        return quitadas;
+    }
+
+    // Filtro para tabela geral (mostra apenas ativos)
+    function getAtivosParaTabela() {
         let ativos = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
         let nome = document.getElementById('filtroNome').value.toLowerCase();
         if(nome) ativos = ativos.filter(d => d.nome.toLowerCase().includes(nome));
@@ -540,6 +606,85 @@
             }
         });
         return total;
+    }
+
+    // Dados para gráfico: últimos 6 meses (pago vs a pagar)
+    function getDadosGrafico() {
+        let hoje = new Date();
+        let meses = [];
+        let pagos = [];
+        let aPagar = [];
+        for(let i = 5; i >= 0; i--) {
+            let data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+            let mesStr = `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}`;
+            meses.push(mesStr);
+            // Filtro por aba para gráfico também
+            let dividasFiltradas = dividas.filter(d => {
+                if(abaFiltroAtual !== 'all') return d.cartao === abaFiltroAtual;
+                return true;
+            });
+            let totalPago = 0;
+            let totalDevido = 0;
+            dividasFiltradas.forEach(d => {
+                d.pagamentos?.forEach(p => { if(p.data.startsWith(mesStr)) totalPago += d.valorParcela; });
+                if(d.parcelaAtual <= d.totalParcelas) {
+                    for(let j = d.parcelaAtual; j <= d.totalParcelas; j++) {
+                        let [dia, mes, ano] = calcularVencimento(d.inicio, j, d.cartao)?.split('/') || [];
+                        if(mes && ano) {
+                            let dueStr = `${ano}-${mes.padStart(2,'0')}`;
+                            if(dueStr === mesStr) totalDevido += d.valorParcela;
+                        }
+                    }
+                }
+            });
+            pagos.push(totalPago);
+            aPagar.push(totalDevido);
+        }
+        return { meses, pagos, aPagar };
+    }
+
+    function atualizarGrafico() {
+        const ctx = document.getElementById('evolucaoChart').getContext('2d');
+        const { meses, pagos, aPagar } = getDadosGrafico();
+        if(chartInstance) chartInstance.destroy();
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: meses,
+                datasets: [
+                    { label: '💰 Pagamentos realizados', data: pagos, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.3, fill: true },
+                    { label: '📅 Valores a vencer', data: aPagar, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', tension: 0.3, fill: true }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: R$ ${ctx.raw.toLocaleString('pt-BR', {minimumFractionDigits:2})}` } },
+                    legend: { position: 'top' }
+                },
+                scales: { y: { ticks: { callback: (val) => `R$ ${val.toLocaleString('pt-BR')}` }, title: { display: true, text: 'Valor (R$)' } } }
+            }
+        });
+    }
+
+    function alternarVisaoGraficos(mostrar) {
+        const graficosDiv = document.getElementById('graficosContainer');
+        const activeDiv = document.getElementById('activeLoansList');
+        const paidDiv = document.getElementById('paidLoansList');
+        const tabelaDiv = document.querySelector('.table-container');
+        if(mostrar) {
+            graficosDiv.style.display = 'block';
+            activeDiv.style.display = 'none';
+            paidDiv.style.display = 'none';
+            tabelaDiv.style.display = 'none';
+            atualizarGrafico();
+        } else {
+            graficosDiv.style.display = 'none';
+            activeDiv.style.display = 'block';
+            paidDiv.style.display = 'block';
+            tabelaDiv.style.display = 'block';
+        }
     }
 
     function atualizarTela() {
@@ -580,9 +725,8 @@
             }).join('');
         }
         
+        let quitadas = getQuitadasFiltradas();
         let paidDiv = document.getElementById('paidLoansList');
-        let quitadas = dividas.filter(d => d.parcelaAtual > d.totalParcelas);
-        if(abaFiltroAtual !== 'all') quitadas = quitadas.filter(d => d.cartao === abaFiltroAtual);
         if(quitadas.length === 0) {
             paidDiv.innerHTML = '<p>Nenhuma dívida quitada.</p>';
         } else {
@@ -594,12 +738,12 @@
             `).join('');
         }
         
-        let todosAtivosTabela = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
+        let ativosTabela = getAtivosParaTabela();
         let tableBody = document.getElementById('tableBody');
-        if(todosAtivosTabela.length === 0) {
+        if(ativosTabela.length === 0) {
             tableBody.innerHTML = '<tr><td colspan="7">Nenhuma dívida ativa no momento.</td></tr>';
         } else {
-            tableBody.innerHTML = todosAtivosTabela.map(d => {
+            tableBody.innerHTML = ativosTabela.map(d => {
                 let faltam = d.totalParcelas - d.parcelaAtual + 1;
                 let pendente = faltam * d.valorParcela;
                 return `<tr>
@@ -610,12 +754,15 @@
                     <td>${faltam}</td>
                     <td>R$ ${pendente.toFixed(2)}</td>
                     <td><button class="btn-sm" onclick="abrirWhats(${d.id})" style="background:#25D366;">📲</button></td>
-                `;
+                </tr>`;
             }).join('');
         }
         
+        // Atualiza selects de pagamento (apenas ativos)
+        let todosAtivosSelect = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
+        if(abaFiltroAtual !== 'all') todosAtivosSelect = todosAtivosSelect.filter(d => d.cartao === abaFiltroAtual);
         let select = document.getElementById('payLoanSelect');
-        select.innerHTML = todosAtivosTabela.map(d => `<option value="${d.id}">${d.nome} (Cartão ${d.cartao}) - ${d.parcelaAtual}/${d.totalParcelas} - R$ ${d.valorParcela}</option>`).join('');
+        select.innerHTML = todosAtivosSelect.map(d => `<option value="${d.id}">${d.nome} (Cartão ${d.cartao}) - ${d.parcelaAtual}/${d.totalParcelas} - R$ ${d.valorParcela}</option>`).join('');
         
         let editSelect = document.getElementById('editLoanSelect');
         editSelect.innerHTML = dividas.map(d => `<option value="${d.id}">${d.nome} (Cartão ${d.cartao}) - ${d.parcelaAtual}/${d.totalParcelas}${d.parcelaAtual > d.totalParcelas ? ' [QUITADA]' : ''}</option>`).join('');
@@ -629,9 +776,16 @@
     function setAbaFiltro(filtro) {
         abaFiltroAtual = filtro;
         document.querySelectorAll('.filter-tab').forEach(btn => {
-            if(btn.getAttribute('data-filtro') === filtro) btn.classList.add('active');
-            else btn.classList.remove('active');
+            if(btn.getAttribute('data-filtro') === filtro) btn.classList.remove('active'); // desativa todos
         });
+        // ativa o correto
+        document.querySelectorAll('.filter-tab').forEach(btn => {
+            if(btn.getAttribute('data-filtro') === filtro) btn.classList.add('active');
+        });
+        // Esconder gráficos se estiver visível
+        if(document.getElementById('graficosContainer').style.display === 'block') {
+            alternarVisaoGraficos(false);
+        }
         atualizarTela();
     }
 
@@ -689,6 +843,8 @@
     };
     
     document.getElementById('payInstallmentBtn').onclick = () => {
+        let senha = document.getElementById('paySenha').value;
+        if(senha !== SENHA) { alert("Senha incorreta! Ação não permitida."); return; }
         let id = parseInt(document.getElementById('payLoanSelect').value);
         let data = document.getElementById('payDate').value;
         let divida = dividas.find(d => d.id === id);
@@ -701,6 +857,7 @@
         atualizarTela();
         alert("Pagamento registrado!");
         document.getElementById('payDate').value = '';
+        document.getElementById('paySenha').value = '';
     };
     
     function verificarSenha() {
@@ -770,6 +927,7 @@
                 nextId = data.nextId || 1;
                 salvarDados();
                 atualizarTela();
+                if(document.getElementById('graficosContainer').style.display === 'block') atualizarGrafico();
                 alert("Backup restaurado!");
             } catch(e) { alert("Erro ao restaurar"); }
         };
@@ -785,11 +943,20 @@
         btn.onclick = () => setAcao(btn.getAttribute('data-acao'));
     });
     
-    document.querySelectorAll('.filter-tab').forEach(btn => {
+    document.querySelectorAll('.filter-tab[data-filtro]').forEach(btn => {
         btn.onclick = () => setAbaFiltro(btn.getAttribute('data-filtro'));
     });
     
-    document.getElementById('filtroNome').addEventListener('input', () => atualizarTela());
+    // Lógica da aba Gráficos
+    document.getElementById('btnAbaGraficos').onclick = () => {
+        alternarVisaoGraficos(true);
+        atualizarGrafico();
+    };
+    
+    document.getElementById('filtroNome').addEventListener('input', () => {
+        if(document.getElementById('graficosContainer').style.display === 'block') atualizarGrafico();
+        else atualizarTela();
+    });
     document.getElementById('mesReferencia').addEventListener('change', () => atualizarTela());
     
     carregarDados();
