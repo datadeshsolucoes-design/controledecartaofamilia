@@ -77,6 +77,7 @@
             text-align: center;
             font-size: 1.1rem;
             padding: 12px;
+            width: 100%;
         }
 
         .login-container button {
@@ -466,6 +467,12 @@
             display: none;
         }
 
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--primary);
+        }
+
         @media (max-width: 700px) {
             body { padding: 12px; font-size: 16px; }
             .stat-card .value { font-size: 1.3rem; }
@@ -530,7 +537,7 @@
             <div class="form-row">
                 <div class="form-group"><label>Parcelas já pagas</label><input type="number" id="newPaid" placeholder="0" value="0"></div>
                 <div class="form-group"><label>Cartão</label><select id="newCard"><option value="A">Cartão A (vence dia 10)</option><option value="B">Cartão B (vence dia 25)</option></select></div>
-                <div class="form-group"><label>Data início <span class="label-opcional">(opcional - calcula automático)</span></label><input type="date" id="newDate"></div>
+                <div class="form-group"><label>Data início <span class="label-opcional">(opcional)</span></label><input type="date" id="newDate"></div>
             </div>
             <button id="createLoanBtn">✅ Criar dívida</button>
         </div>
@@ -627,6 +634,7 @@
 </div>
 
 <script>
+    // SEU LINK DO APPS SCRIPT
     const API_URL = 'https://script.google.com/macros/s/AKfycbzFVHyUcEFsTIl4NOHJNjzou1kUAEAPL4trXv6NMEDAWtGfgKhT8Q-gYMmfwD16hjVxaw/exec';
     const SENHA_ADMIN = "270601";
     const CARD_DUE = { A: 10, B: 25 };
@@ -645,34 +653,20 @@
         return `${partes[2]}/${partes[1]}/${partes[0]}`;
     }
 
-    function formatarDataISO(dataBR) {
-        if(!dataBR) return '';
-        let partes = dataBR.split('/');
-        return `${partes[2]}-${partes[1]}-${partes[0]}`;
-    }
-
-    // 🔥 FUNÇÃO QUE CALCULA A DATA DE INÍCIO AUTOMATICAMENTE 🔥
-    function calcularDataInicioAuto(pagas, cartao, dataPrimeiroPagamento = null) {
-        // Se tem data do primeiro pagamento, usa ela
-        if(dataPrimeiroPagamento) {
-            let data = new Date(dataPrimeiroPagamento);
-            // Volta os meses equivalentes às parcelas pagas
-            data.setMonth(data.getMonth() - (pagas - 1));
-            return data.toISOString().slice(0,10);
-        }
-        
-        // Se não tem pagamento, usa a data atual
+    function calcularDataInicioAuto(pagas, cartao) {
         let dataAtual = new Date();
         let diaVencimento = CARD_DUE[cartao];
         let ano = dataAtual.getFullYear();
         let mes = dataAtual.getMonth();
         
-        // Ajusta para o dia de vencimento do cartão
         let dataCalculada = new Date(ano, mes, diaVencimento);
         
-        // Se a data calculada for maior que a data atual, volta um mês
         if(dataCalculada > dataAtual) {
             dataCalculada.setMonth(dataCalculada.getMonth() - 1);
+        }
+        
+        if(pagas > 0) {
+            dataCalculada.setMonth(dataCalculada.getMonth() - (pagas - 1));
         }
         
         return dataCalculada.toISOString().slice(0,10);
@@ -694,6 +688,7 @@
         try {
             const response = await fetch(`${API_URL}?action=load`);
             const result = await response.json();
+            
             if(result.success && result.data) {
                 dividas = result.data.map(row => ({
                     id: parseInt(row[0]),
@@ -707,11 +702,13 @@
                     pagamentos: row[8] ? JSON.parse(row[8]) : []
                 }));
                 nextId = dividas.length > 0 ? Math.max(...dividas.map(d => d.id)) + 1 : 1;
+                console.log("Dados carregados:", dividas.length);
                 return true;
             }
             return false;
         } catch(e) {
             console.error("Erro ao carregar:", e);
+            alert("Erro ao carregar dados: " + e.message);
             return false;
         }
     }
@@ -720,9 +717,17 @@
         try {
             const response = await fetch(`${API_URL}?action=save&dados=${encodeURIComponent(JSON.stringify(dividas))}`);
             const result = await response.json();
-            return result.success;
+            
+            if(result.success) {
+                console.log("Dados salvos com sucesso");
+                return true;
+            } else {
+                alert("Erro ao salvar: " + (result.error || "desconhecido"));
+                return false;
+            }
         } catch(e) {
             console.error("Erro ao salvar:", e);
+            alert("Erro de conexão ao salvar: " + e.message);
             return false;
         }
     }
@@ -915,14 +920,14 @@
         let tableBody = document.getElementById('tableBody');
         if(tableBody) {
             if(ativos.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="8">Nenhuma dívida ativa.离子</td>';
+                tableBody.innerHTML = '<tr><td colspan="8">Nenhuma dívida ativa. </d> </d> ';
             } else {
                 tableBody.innerHTML = ativos.map(d => {
                     let faltam = d.totalParcelas - d.parcelaAtual + 1;
                     let pendente = faltam * d.valorParcela;
                     let vencimento = calcularVencimento(d.inicio, d.parcelaAtual, d.cartao) || '—';
                     return `<tr>
-                        <td><strong>${d.nome}</strong></td>
+                        <td><strong>${d.nome}</strong></d>
                         <td>${d.cartao}</d>
                         <td>${d.parcelaAtual}/${d.totalParcelas}</d>
                         <td>R$ ${d.valorParcela.toFixed(2)}</d>
@@ -939,7 +944,7 @@
         let quitadasBody = document.getElementById('quitadasTableBody');
         if(quitadasBody) {
             if(quitadas.length === 0) {
-                quitadasBody.innerHTML = '<tr><td colspan="7">Nenhuma dívida quitada.}</d></tr>';
+                quitadasBody.innerHTML = '<tr><td colspan="7">Nenhuma dívida quitada.</d> </d> ';
             } else {
                 quitadasBody.innerHTML = quitadas.map(d => {
                     let totalPago = d.totalParcelas * d.valorParcela;
@@ -953,7 +958,7 @@
                         <td>R$ ${totalPago.toFixed(2)}</d>
                         <td>${dataQuitacao}</d>
                         <td>${d.whats || 'não cadastrado'}</d>
-                    </tr>`;
+                    </td>`;
                 }).join('');
             }
         }
@@ -1021,7 +1026,11 @@
     });
     
     document.getElementById('createLoanBtn')?.addEventListener('click', async () => {
-        if(!isAdmin) return;
+        if(!isAdmin) {
+            alert("Apenas administrador pode cadastrar!");
+            return;
+        }
+        
         let nome = document.getElementById('newName').value.trim();
         let whats = document.getElementById('newWhats').value.trim();
         let valor = parseFloat(document.getElementById('newInstallment').value);
@@ -1029,26 +1038,18 @@
         let pagas = parseInt(document.getElementById('newPaid').value) || 0;
         let cartao = document.getElementById('newCard').value;
         let inicioFornecida = document.getElementById('newDate').value;
-        let inicio = inicioFornecida;
         
         if(!nome) { alert("Preencha o Nome"); return; }
         if(isNaN(valor) || valor <= 0) { alert("Valor inválido"); return; }
         if(isNaN(total) || total <= 0) { alert("Total de parcelas inválido"); return; }
         if(pagas >= total) { alert("Parcelas pagas não pode ser >= total"); return; }
         
-        // 🔥 SE DATA INÍCIO NÃO FOI FORNECIDA, CALCULA AUTOMATICAMENTE 🔥
+        let inicio = inicioFornecida;
         if(!inicio) {
-            // Se tem parcelas pagas, tenta calcular baseado nos pagamentos (se houver)
-            if(pagas > 0) {
-                // Para cálculo automático, vamos considerar que a primeira parcela foi paga na data atual
-                // ou em uma data simulada. Como não temos pagamentos ainda, usamos data atual
-                inicio = calcularDataInicioAuto(pagas, cartao, null);
-            } else {
-                inicio = calcularDataInicioAuto(pagas, cartao, null);
-            }
+            inicio = calcularDataInicioAuto(pagas, cartao);
         }
         
-        dividas.push({ 
+        const novaDivida = { 
             id: nextId++, 
             nome, 
             whats, 
@@ -1058,19 +1059,26 @@
             cartao, 
             inicio, 
             pagamentos: [] 
-        });
+        };
         
-        await salvarDadosCloud();
-        await carregarDadosCloud();
-        atualizarTela();
+        dividas.push(novaDivida);
+        const salvou = await salvarDadosCloud();
         
-        document.getElementById('newName').value = '';
-        document.getElementById('newWhats').value = '';
-        document.getElementById('newInstallment').value = '';
-        document.getElementById('newTotal').value = '';
-        document.getElementById('newPaid').value = '0';
-        document.getElementById('newDate').value = '';
-        alert(`Dívida cadastrada! Data início calculada: ${formatarDataBR(inicio)}`);
+        if(salvou) {
+            await carregarDadosCloud();
+            atualizarTela();
+            
+            document.getElementById('newName').value = '';
+            document.getElementById('newWhats').value = '';
+            document.getElementById('newInstallment').value = '';
+            document.getElementById('newTotal').value = '';
+            document.getElementById('newPaid').value = '0';
+            document.getElementById('newDate').value = '';
+            
+            alert(`✅ Dívida cadastrada com sucesso!\n📅 Data início: ${formatarDataBR(inicio)}`);
+        } else {
+            alert("❌ Erro ao salvar! Verifique sua conexão.");
+        }
     });
     
     document.getElementById('payInstallmentBtn')?.addEventListener('click', async () => {
@@ -1085,10 +1093,16 @@
         if(!divida.pagamentos) divida.pagamentos = [];
         divida.pagamentos.push({ data, parcela: divida.parcelaAtual });
         divida.parcelaAtual++;
-        await salvarDadosCloud();
-        await carregarDadosCloud();
-        atualizarTela();
-        alert("Pagamento registrado!");
+        
+        const salvou = await salvarDadosCloud();
+        if(salvou) {
+            await carregarDadosCloud();
+            atualizarTela();
+            alert("Pagamento registrado!");
+        } else {
+            alert("Erro ao registrar pagamento!");
+        }
+        
         document.getElementById('payDate').value = '';
         document.getElementById('paySenha').value = '';
     });
@@ -1107,10 +1121,15 @@
         if(novoTotal < divida.parcelaAtual) divida.parcelaAtual = novoTotal;
         divida.totalParcelas = novoTotal;
         if(divida.parcelaAtual > divida.totalParcelas) divida.parcelaAtual = divida.totalParcelas + 1;
-        await salvarDadosCloud();
-        await carregarDadosCloud();
-        atualizarTela();
-        alert("Atualizado!");
+        
+        const salvou = await salvarDadosCloud();
+        if(salvou) {
+            await carregarDadosCloud();
+            atualizarTela();
+            alert("Atualizado!");
+        } else {
+            alert("Erro ao atualizar!");
+        }
         document.getElementById('editSenha').value = '';
     });
     
@@ -1121,10 +1140,14 @@
         let id = parseInt(document.getElementById('editLoanSelect').value);
         if(confirm("Excluir permanentemente?")) {
             dividas = dividas.filter(d => d.id !== id);
-            await salvarDadosCloud();
-            await carregarDadosCloud();
-            atualizarTela();
-            alert("Excluído!");
+            const salvou = await salvarDadosCloud();
+            if(salvou) {
+                await carregarDadosCloud();
+                atualizarTela();
+                alert("Excluído!");
+            } else {
+                alert("Erro ao excluir!");
+            }
             document.getElementById('editSenha').value = '';
         }
     });
@@ -1170,10 +1193,12 @@
                 let data = JSON.parse(ev.target.result);
                 dividas = data.dividas || [];
                 nextId = data.nextId || 1;
-                await salvarDadosCloud();
-                await carregarDadosCloud();
-                atualizarTela();
-                alert("Backup restaurado!");
+                const salvou = await salvarDadosCloud();
+                if(salvou) {
+                    await carregarDadosCloud();
+                    atualizarTela();
+                    alert("Backup restaurado!");
+                }
             } catch(e) { alert("Erro ao restaurar"); }
         };
         reader.readAsText(file);
