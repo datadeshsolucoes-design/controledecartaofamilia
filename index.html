@@ -251,8 +251,8 @@
         .btn-warning { background: var(--warning); }
         .btn-sm { padding: 6px 12px; font-size: 0.8rem; width: auto; }
 
-        /* ABAS - Nova ordem: Cartão A, Cartão B, Todos os cartões */
-        .filter-tabs {
+        /* ABAS - Layout horizontal (uma do lado da outra) */
+        .tabs-container {
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
@@ -392,7 +392,6 @@
             .action-btn, .filter-tab { padding: 8px 16px; font-size: 0.85rem; }
         }
     </style>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="container">
@@ -479,16 +478,12 @@
         </div>
     </div>
 
-    <!-- ABAS: Ordem alterada: Cartão A, Cartão B, Todos os cartões -->
-    <div class="filter-tabs">
+    <!-- ABAS: Layout horizontal (uma do lado da outra) -->
+    <div class="tabs-container">
         <button class="filter-tab active" data-filtro="A">💳 Cartão A (dia 10)</button>
         <button class="filter-tab" data-filtro="B">💳 Cartão B (dia 25)</button>
         <button class="filter-tab" data-filtro="all">📋 Todos os cartões</button>
-    </div>
-
-    <!-- Nova Aba Gráficos -->
-    <div class="filter-tabs" style="margin-top: -10px; border-bottom: none;">
-        <button class="filter-tab" data-abagrafico="graficos" id="btnAbaGraficos">📈 Gráficos Evolução</button>
+        <button class="filter-tab" data-filtro="graficos">📈 Gráficos Evolução</button>
     </div>
 
     <!-- Container de Gráficos (inicialmente oculto) -->
@@ -499,19 +494,21 @@
     </div>
 
     <!-- LISTA DE DÍVIDAS ATIVAS -->
-    <h2>📋 Dívidas ativas</h2>
-    <div id="activeLoansList"></div>
+    <div id="conteudoListas">
+        <h2>📋 Dívidas ativas</h2>
+        <div id="activeLoansList"></div>
 
-    <h2>✅ Histórico (Quitadas)</h2>
-    <div id="paidLoansList"></div>
+        <h2>✅ Histórico (Quitadas)</h2>
+        <div id="paidLoansList"></div>
 
-    <!-- TABELA COMPLETA -->
-    <h2>📊 Tabela completa de todas as dívidas</h2>
-    <div class="table-container">
-        <table class="data-table">
-            <thead><tr><th>Nome</th><th>Cartão</th><th>Parcela</th><th>Valor parcela</th><th>Restantes</th><th>Total pendente</th><th>WhatsApp</th></tr></thead>
-            <tbody id="tableBody"></tbody>
-        </table>
+        <!-- TABELA COMPLETA -->
+        <h2>📊 Tabela completa de todas as dívidas</h2>
+        <div class="table-container">
+            <table class="data-table">
+                <thead><tr><th>Nome</th><th>Cartão</th><th>Parcela</th><th>Valor parcela</th><th>Restantes</th><th>Total pendente</th><th>WhatsApp</th></tr></thead>
+                <tbody id="tableBody"></tbody>
+             </table>
+        </div>
     </div>
 </div>
 
@@ -526,12 +523,13 @@
     </div>
 </div>
 
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 <script>
     const SENHA = "270601";
     let dividas = [];
     let nextId = 1;
     let currentMonth = new Date().toISOString().slice(0,7);
-    let abaFiltroAtual = "A"; // Começa em Cartão A conforme ordem
+    let abaFiltroAtual = "A";
     let chartInstance = null;
     const CARD_DUE = { A: 10, B: 25 };
 
@@ -557,31 +555,27 @@
         if(!dividas.length) dividas = [];
     }
 
-    // Aplica filtro de nome + aba (agora "all", "A", "B")
     function getFiltered() {
         let ativos = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
         let nome = document.getElementById('filtroNome').value.toLowerCase();
         if(nome) ativos = ativos.filter(d => d.nome.toLowerCase().includes(nome));
-        // Filtro por cartão
-        if(abaFiltroAtual !== 'all') ativos = ativos.filter(d => d.cartao === abaFiltroAtual);
+        if(abaFiltroAtual !== 'all' && abaFiltroAtual !== 'graficos') ativos = ativos.filter(d => d.cartao === abaFiltroAtual);
         return ativos;
     }
     
-    // Filtro para quitadas seguindo mesma regra
     function getQuitadasFiltradas() {
         let quitadas = dividas.filter(d => d.parcelaAtual > d.totalParcelas);
         let nome = document.getElementById('filtroNome').value.toLowerCase();
         if(nome) quitadas = quitadas.filter(d => d.nome.toLowerCase().includes(nome));
-        if(abaFiltroAtual !== 'all') quitadas = quitadas.filter(d => d.cartao === abaFiltroAtual);
+        if(abaFiltroAtual !== 'all' && abaFiltroAtual !== 'graficos') quitadas = quitadas.filter(d => d.cartao === abaFiltroAtual);
         return quitadas;
     }
 
-    // Filtro para tabela geral (mostra apenas ativos)
     function getAtivosParaTabela() {
         let ativos = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
         let nome = document.getElementById('filtroNome').value.toLowerCase();
         if(nome) ativos = ativos.filter(d => d.nome.toLowerCase().includes(nome));
-        if(abaFiltroAtual !== 'all') ativos = ativos.filter(d => d.cartao === abaFiltroAtual);
+        if(abaFiltroAtual !== 'all' && abaFiltroAtual !== 'graficos') ativos = ativos.filter(d => d.cartao === abaFiltroAtual);
         return ativos;
     }
 
@@ -608,7 +602,6 @@
         return total;
     }
 
-    // Dados para gráfico: últimos 6 meses (pago vs a pagar)
     function getDadosGrafico() {
         let hoje = new Date();
         let meses = [];
@@ -618,9 +611,8 @@
             let data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
             let mesStr = `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}`;
             meses.push(mesStr);
-            // Filtro por aba para gráfico também
             let dividasFiltradas = dividas.filter(d => {
-                if(abaFiltroAtual !== 'all') return d.cartao === abaFiltroAtual;
+                if(abaFiltroAtual !== 'all' && abaFiltroAtual !== 'graficos') return d.cartao === abaFiltroAtual;
                 return true;
             });
             let totalPago = 0;
@@ -652,8 +644,8 @@
             data: {
                 labels: meses,
                 datasets: [
-                    { label: '💰 Pagamentos realizados', data: pagos, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.3, fill: true },
-                    { label: '📅 Valores a vencer', data: aPagar, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', tension: 0.3, fill: true }
+                    { label: '💰 Pagamentos realizados', data: pagos, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.3, fill: true, pointRadius: 4, pointHoverRadius: 6 },
+                    { label: '📅 Valores a vencer', data: aPagar, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', tension: 0.3, fill: true, pointRadius: 4, pointHoverRadius: 6 }
                 ]
             },
             options: {
@@ -663,31 +655,42 @@
                     tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: R$ ${ctx.raw.toLocaleString('pt-BR', {minimumFractionDigits:2})}` } },
                     legend: { position: 'top' }
                 },
-                scales: { y: { ticks: { callback: (val) => `R$ ${val.toLocaleString('pt-BR')}` }, title: { display: true, text: 'Valor (R$)' } } }
+                scales: { 
+                    y: { 
+                        ticks: { callback: (val) => `R$ ${val.toLocaleString('pt-BR')}` },
+                        title: { display: true, text: 'Valor (R$)' },
+                        grid: { display: false } // Remove linhas de grade do eixo Y
+                    },
+                    x: {
+                        grid: { display: false } // Remove linhas de grade do eixo X
+                    }
+                }
             }
         });
     }
 
-    function alternarVisaoGraficos(mostrar) {
+    function alternarVisao(mostrarGraficos) {
         const graficosDiv = document.getElementById('graficosContainer');
-        const activeDiv = document.getElementById('activeLoansList');
-        const paidDiv = document.getElementById('paidLoansList');
-        const tabelaDiv = document.querySelector('.table-container');
-        if(mostrar) {
+        const conteudoListas = document.getElementById('conteudoListas');
+        if(mostrarGraficos) {
             graficosDiv.style.display = 'block';
-            activeDiv.style.display = 'none';
-            paidDiv.style.display = 'none';
-            tabelaDiv.style.display = 'none';
+            conteudoListas.style.display = 'none';
             atualizarGrafico();
         } else {
             graficosDiv.style.display = 'none';
-            activeDiv.style.display = 'block';
-            paidDiv.style.display = 'block';
-            tabelaDiv.style.display = 'block';
+            conteudoListas.style.display = 'block';
         }
     }
 
     function atualizarTela() {
+        // Se estiver na aba de gráficos, não atualiza as listas
+        if(abaFiltroAtual === 'graficos') {
+            alternarVisao(true);
+            return;
+        }
+        
+        alternarVisao(false);
+        
         let ativos = getFiltered();
         let todosAtivos = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
         let totalDivida = todosAtivos.reduce((s, d) => s + (d.totalParcelas - d.parcelaAtual + 1) * d.valorParcela, 0);
@@ -741,7 +744,7 @@
         let ativosTabela = getAtivosParaTabela();
         let tableBody = document.getElementById('tableBody');
         if(ativosTabela.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="7">Nenhuma dívida ativa no momento.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="7">Nenhuma dívida ativa no momento.</td></td>';
         } else {
             tableBody.innerHTML = ativosTabela.map(d => {
                 let faltam = d.totalParcelas - d.parcelaAtual + 1;
@@ -754,13 +757,12 @@
                     <td>${faltam}</td>
                     <td>R$ ${pendente.toFixed(2)}</td>
                     <td><button class="btn-sm" onclick="abrirWhats(${d.id})" style="background:#25D366;">📲</button></td>
-                </tr>`;
+                </table>`;
             }).join('');
         }
         
-        // Atualiza selects de pagamento (apenas ativos)
         let todosAtivosSelect = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
-        if(abaFiltroAtual !== 'all') todosAtivosSelect = todosAtivosSelect.filter(d => d.cartao === abaFiltroAtual);
+        if(abaFiltroAtual !== 'all' && abaFiltroAtual !== 'graficos') todosAtivosSelect = todosAtivosSelect.filter(d => d.cartao === abaFiltroAtual);
         let select = document.getElementById('payLoanSelect');
         select.innerHTML = todosAtivosSelect.map(d => `<option value="${d.id}">${d.nome} (Cartão ${d.cartao}) - ${d.parcelaAtual}/${d.totalParcelas} - R$ ${d.valorParcela}</option>`).join('');
         
@@ -775,17 +777,14 @@
 
     function setAbaFiltro(filtro) {
         abaFiltroAtual = filtro;
+        // Atualiza estilo das abas
         document.querySelectorAll('.filter-tab').forEach(btn => {
-            if(btn.getAttribute('data-filtro') === filtro) btn.classList.remove('active'); // desativa todos
+            if(btn.getAttribute('data-filtro') === filtro) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
         });
-        // ativa o correto
-        document.querySelectorAll('.filter-tab').forEach(btn => {
-            if(btn.getAttribute('data-filtro') === filtro) btn.classList.add('active');
-        });
-        // Esconder gráficos se estiver visível
-        if(document.getElementById('graficosContainer').style.display === 'block') {
-            alternarVisaoGraficos(false);
-        }
         atualizarTela();
     }
 
@@ -927,7 +926,7 @@
                 nextId = data.nextId || 1;
                 salvarDados();
                 atualizarTela();
-                if(document.getElementById('graficosContainer').style.display === 'block') atualizarGrafico();
+                if(abaFiltroAtual === 'graficos') atualizarGrafico();
                 alert("Backup restaurado!");
             } catch(e) { alert("Erro ao restaurar"); }
         };
@@ -937,26 +936,18 @@
     document.getElementById('themeToggle').onclick = () => {
         document.body.classList.toggle('dark');
         document.getElementById('themeToggle').innerText = document.body.classList.contains('dark') ? '☀️ Modo claro' : '🌙 Modo escuro';
+        if(chartInstance) atualizarGrafico();
     };
     
     document.querySelectorAll('.action-btn').forEach(btn => {
         btn.onclick = () => setAcao(btn.getAttribute('data-acao'));
     });
     
-    document.querySelectorAll('.filter-tab[data-filtro]').forEach(btn => {
+    document.querySelectorAll('.filter-tab').forEach(btn => {
         btn.onclick = () => setAbaFiltro(btn.getAttribute('data-filtro'));
     });
     
-    // Lógica da aba Gráficos
-    document.getElementById('btnAbaGraficos').onclick = () => {
-        alternarVisaoGraficos(true);
-        atualizarGrafico();
-    };
-    
-    document.getElementById('filtroNome').addEventListener('input', () => {
-        if(document.getElementById('graficosContainer').style.display === 'block') atualizarGrafico();
-        else atualizarTela();
-    });
+    document.getElementById('filtroNome').addEventListener('input', () => atualizarTela());
     document.getElementById('mesReferencia').addEventListener('change', () => atualizarTela());
     
     carregarDados();
