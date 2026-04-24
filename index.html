@@ -49,6 +49,7 @@
             margin: 0 auto;
         }
 
+        /* HEADER COM BOTÃO DE TEMA NO CANTO DIREITO */
         .header {
             display: flex;
             justify-content: space-between;
@@ -70,12 +71,14 @@
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: 60px;
-            padding: 8px 16px;
+            padding: 8px 20px;
             cursor: pointer;
             font-weight: 500;
             color: var(--text);
+            font-size: 0.9rem;
         }
 
+        /* FILTROS */
         .controls-bar {
             display: flex;
             flex-wrap: wrap;
@@ -111,6 +114,7 @@
             font-size: 0.9rem;
         }
 
+        /* CARDS */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -138,64 +142,38 @@
             font-weight: 700;
         }
 
-        /* Abas horizontais (menu superior estilo navegador) */
-        .nav-horizontal {
+        /* BOTÕES DE AÇÃO (Nova dívida, Pagar, Editar, Backup) - LADO A LADO */
+        .action-buttons {
             display: flex;
+            flex-wrap: wrap;
             gap: 12px;
             margin-bottom: 25px;
-            flex-wrap: wrap;
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 8px;
         }
 
-        .nav-btn {
-            background: transparent;
-            border: none;
-            padding: 12px 28px;
-            border-radius: 40px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            color: var(--text-light);
-            transition: all 0.2s;
-        }
-
-        .nav-btn:hover {
-            background: var(--bg);
-            color: var(--primary);
-        }
-
-        .nav-btn.active {
-            background: var(--primary);
-            color: white;
-        }
-
-        /* Abas de formulário */
-        .tabs {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 10px;
-        }
-
-        .tab-btn {
-            background: transparent;
-            border: none;
-            padding: 10px 24px;
+        .action-btn {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 12px 24px;
             border-radius: 40px;
             font-weight: 600;
             font-size: 0.95rem;
             cursor: pointer;
-            color: var(--text-light);
+            color: var(--text);
+            transition: all 0.2s;
         }
 
-        .tab-btn.active {
+        .action-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .action-btn:hover {
             background: var(--primary);
             color: white;
         }
 
+        /* FORMULÁRIOS */
         .form-panel {
             background: var(--card);
             border-radius: 24px;
@@ -255,6 +233,39 @@
         .btn-warning { background: var(--warning); }
         .btn-sm { padding: 6px 12px; font-size: 0.8rem; width: auto; }
 
+        /* ABAS DE FILTRO (Todos / Cartão A / Cartão B) - LADO A LADO */
+        .filter-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .filter-tab {
+            background: transparent;
+            border: none;
+            padding: 10px 28px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            color: var(--text-light);
+            transition: all 0.2s;
+        }
+
+        .filter-tab:hover {
+            background: var(--bg);
+            color: var(--primary);
+        }
+
+        .filter-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* CARDS DE DÍVIDA */
         .divida-card {
             background: var(--card);
             border-radius: 20px;
@@ -293,6 +304,7 @@
             border-radius: 10px;
         }
 
+        /* TABELA */
         .data-table {
             width: 100%;
             border-collapse: collapse;
@@ -319,6 +331,7 @@
             overflow-x: auto;
         }
 
+        /* MODAL */
         .modal {
             position: fixed;
             top: 0;
@@ -347,45 +360,39 @@
         @media (max-width: 700px) {
             body { padding: 12px; font-size: 16px; }
             .stat-card .value { font-size: 1.5rem; }
-            .nav-btn { padding: 8px 16px; font-size: 0.9rem; }
+            .action-btn, .filter-tab { padding: 8px 16px; font-size: 0.85rem; }
         }
     </style>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="container">
+    <!-- CABEÇALHO COM BOTÃO DE TEMA NO CANTO -->
     <div class="header">
         <h1>💳 Controle do Cartão</h1>
         <button class="theme-toggle" id="themeToggle">🌙 Modo escuro</button>
     </div>
 
-    <!-- Filtros -->
+    <!-- FILTROS (Mês e Nome) -->
     <div class="controls-bar">
         <div class="filter-group"><label>📅 Mês referência:</label><input type="month" id="mesReferencia"></div>
         <div class="filter-group"><label>🔍 Nome:</label><input type="text" id="filtroNome" placeholder="Digite o nome"></div>
         <button id="btnLimparFiltros" style="background:var(--text-light); width:auto;">🧹 Limpar</button>
     </div>
 
-    <!-- Cards resumo -->
+    <!-- CARDS RESUMO -->
     <div class="stats-grid" id="statsGrid"></div>
 
-    <!-- Abas horizontais (estilo menu) -->
-    <div class="nav-horizontal">
-        <button class="nav-btn active" data-filtro-cartao="all">📋 Todos os cartões</button>
-        <button class="nav-btn" data-filtro-cartao="A">💳 Cartão A (dia 10)</button>
-        <button class="nav-btn" data-filtro-cartao="B">💳 Cartão B (dia 25)</button>
+    <!-- BOTÕES DE AÇÃO (LADO A LADO) -->
+    <div class="action-buttons">
+        <button class="action-btn active" data-acao="newLoan">➕ Nova dívida</button>
+        <button class="action-btn" data-acao="pay">💰 Pagar parcela</button>
+        <button class="action-btn" data-acao="edit">✏️ Editar/Excluir</button>
+        <button class="action-btn" data-acao="backup">💾 Backup/Excel</button>
     </div>
 
-    <!-- Abas de formulário (ações) -->
-    <div class="tabs">
-        <button class="tab-btn active" data-tab="newLoan">➕ Nova dívida</button>
-        <button class="tab-btn" data-tab="pay">💰 Pagar parcela</button>
-        <button class="tab-btn" data-tab="edit">✏️ Editar/Excluir</button>
-        <button class="tab-btn" data-tab="backup">💾 Backup/Excel</button>
-    </div>
-
-    <!-- Formulários -->
-    <div id="newLoan" class="form-panel active">
+    <!-- FORMULÁRIO NOVA DÍVIDA -->
+    <div id="form-newLoan" class="form-panel active">
         <h3>➕ Cadastrar nova dívida no cartão</h3>
         <div class="form-row">
             <div class="form-group"><label>Nome completo</label><input type="text" id="newName" placeholder="Ex: Ana"></div>
@@ -401,7 +408,8 @@
         <button id="createLoanBtn">✅ Criar dívida</button>
     </div>
 
-    <div id="pay" class="form-panel">
+    <!-- FORMULÁRIO PAGAR PARCELA -->
+    <div id="form-pay" class="form-panel">
         <h3>💰 Pagar parcela</h3>
         <div class="form-row">
             <div class="form-group"><label>Selecione a dívida</label><select id="payLoanSelect"></select></div>
@@ -410,7 +418,8 @@
         <button id="payInstallmentBtn">✅ Confirmar pagamento</button>
     </div>
 
-    <div id="edit" class="form-panel">
+    <!-- FORMULÁRIO EDITAR/EXCLUIR -->
+    <div id="form-edit" class="form-panel">
         <h3>✏️ Editar ou excluir dívida</h3>
         <div class="form-row">
             <div class="form-group"><label>Dívida</label><select id="editLoanSelect"></select></div>
@@ -426,7 +435,8 @@
         </div>
     </div>
 
-    <div id="backup" class="form-panel">
+    <!-- FORMULÁRIO BACKUP -->
+    <div id="form-backup" class="form-panel">
         <h3>💾 Exportar / Importar dados</h3>
         <div class="form-row">
             <button id="exportExcelBtn">📊 Baixar Excel</button>
@@ -436,17 +446,24 @@
         </div>
     </div>
 
-    <!-- Lista de dívidas ativas -->
+    <!-- ABAS DE FILTRO (Todos / Cartão A / Cartão B) - LADO A LADO -->
+    <div class="filter-tabs">
+        <button class="filter-tab active" data-filtro="all">📋 Todos os cartões</button>
+        <button class="filter-tab" data-filtro="A">💳 Cartão A (dia 10)</button>
+        <button class="filter-tab" data-filtro="B">💳 Cartão B (dia 25)</button>
+    </div>
+
+    <!-- LISTA DE DÍVIDAS ATIVAS -->
     <h2>📋 Dívidas ativas</h2>
     <div id="activeLoansList"></div>
 
     <h2>✅ Histórico (Quitadas)</h2>
     <div id="paidLoansList"></div>
 
-    <!-- Tabela completa (mostra todos A + B juntos sempre) -->
+    <!-- TABELA COMPLETA -->
     <h2>📊 Tabela completa de todas as dívidas</h2>
     <div class="table-container">
-        <table class="data-table" id="fullTable">
+        <table class="data-table">
             <thead><tr><th>Nome</th><th>Cartão</th><th>Parcela</th><th>Valor parcela</th><th>Restantes</th><th>Total pendente</th><th>WhatsApp</th></tr></thead>
             <tbody id="tableBody"></tbody>
         </table>
@@ -469,7 +486,7 @@
     let dividas = [];
     let nextId = 1;
     let currentMonth = new Date().toISOString().slice(0,7);
-    let abaCartaoAtual = "all"; // all, A, B
+    let abaFiltroAtual = "all";
     const CARD_DUE = { A: 10, B: 25 };
 
     function calcularVencimento(inicio, parcelaAtual, cartao) {
@@ -498,7 +515,7 @@
         let ativos = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
         let nome = document.getElementById('filtroNome').value.toLowerCase();
         if(nome) ativos = ativos.filter(d => d.nome.toLowerCase().includes(nome));
-        if(abaCartaoAtual !== 'all') ativos = ativos.filter(d => d.cartao === abaCartaoAtual);
+        if(abaFiltroAtual !== 'all') ativos = ativos.filter(d => d.cartao === abaFiltroAtual);
         return ativos;
     }
 
@@ -557,9 +574,7 @@
                         <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
                         <div><strong>Faltam: ${faltam}x R$ ${d.valorParcela.toFixed(2)} = R$ ${pendente.toFixed(2)}</strong></div>
                         <div>📞 WhatsApp: ${d.whats || 'não cadastrado'}</div>
-                        <div class="actions" style="display:flex; gap:8px; margin-top:10px;">
-                            <button class="btn-sm" onclick="abrirWhats(${d.id})">📲 Cobrar WhatsApp</button>
-                        </div>
+                        <div style="margin-top:10px;"><button class="btn-sm" onclick="abrirWhats(${d.id})">📲 Cobrar WhatsApp</button></div>
                     </div>
                 `;
             }).join('');
@@ -567,7 +582,7 @@
         
         let paidDiv = document.getElementById('paidLoansList');
         let quitadas = dividas.filter(d => d.parcelaAtual > d.totalParcelas);
-        if(abaCartaoAtual !== 'all') quitadas = quitadas.filter(d => d.cartao === abaCartaoAtual);
+        if(abaFiltroAtual !== 'all') quitadas = quitadas.filter(d => d.cartao === abaFiltroAtual);
         if(quitadas.length === 0) {
             paidDiv.innerHTML = '<p>Nenhuma dívida quitada.</p>';
         } else {
@@ -579,7 +594,6 @@
             `).join('');
         }
         
-        // Tabela completa (mostra TODOS, sem filtro de aba)
         let todosAtivosTabela = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
         let tableBody = document.getElementById('tableBody');
         if(todosAtivosTabela.length === 0) {
@@ -612,13 +626,22 @@
         }
     }
 
-    function setAbaCartao(cartao) {
-        abaCartaoAtual = cartao;
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            if(btn.getAttribute('data-filtro-cartao') === cartao) btn.classList.add('active');
+    function setAbaFiltro(filtro) {
+        abaFiltroAtual = filtro;
+        document.querySelectorAll('.filter-tab').forEach(btn => {
+            if(btn.getAttribute('data-filtro') === filtro) btn.classList.add('active');
             else btn.classList.remove('active');
         });
         atualizarTela();
+    }
+
+    function setAcao(acao) {
+        document.querySelectorAll('.action-btn').forEach(btn => {
+            if(btn.getAttribute('data-acao') === acao) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+        document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(`form-${acao}`).classList.add('active');
     }
 
     window.abrirWhats = function(id) {
@@ -758,17 +781,12 @@
         document.getElementById('themeToggle').innerText = document.body.classList.contains('dark') ? '☀️ Modo claro' : '🌙 Modo escuro';
     };
     
-    document.querySelectorAll('.tab-btn[data-tab]').forEach(btn => {
-        btn.onclick = () => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
-            document.getElementById(btn.getAttribute('data-tab')).classList.add('active');
-        };
+    document.querySelectorAll('.action-btn').forEach(btn => {
+        btn.onclick = () => setAcao(btn.getAttribute('data-acao'));
     });
     
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.onclick = () => setAbaCartao(btn.getAttribute('data-filtro-cartao'));
+    document.querySelectorAll('.filter-tab').forEach(btn => {
+        btn.onclick = () => setAbaFiltro(btn.getAttribute('data-filtro'));
     });
     
     document.getElementById('filtroNome').addEventListener('input', () => atualizarTela());
