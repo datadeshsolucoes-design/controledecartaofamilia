@@ -340,6 +340,18 @@
             margin-top: 4px;
         }
 
+        .sync-status {
+            font-size: 0.75rem;
+            padding: 5px 10px;
+            border-radius: 20px;
+            background: var(--bg);
+            display: inline-block;
+        }
+
+        .sync-success { color: var(--success); }
+        .sync-error { color: var(--danger); }
+        .sync-syncing { color: var(--warning); }
+
         @media (max-width: 700px) {
             body { padding: 12px; font-size: 16px; }
             .stat-card .value { font-size: 1.5rem; }
@@ -351,13 +363,17 @@
 <div class="container">
     <div class="header">
         <h1>💳 Controle do Cartão</h1>
-        <button class="theme-toggle" id="themeToggle">🌙 Modo escuro</button>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <span id="syncStatus" class="sync-status">🔄 Sincronizando...</span>
+            <button class="theme-toggle" id="themeToggle">🌙 Modo escuro</button>
+        </div>
     </div>
 
     <div class="controls-bar">
         <div class="filter-group"><label>📅 Mês referência:</label><input type="month" id="mesReferencia"></div>
         <div class="filter-group"><label>🔍 Nome:</label><input type="text" id="filtroNome" placeholder="Digite o nome"></div>
         <button id="btnLimparFiltros" style="background:var(--text-light); width:auto;">🧹 Limpar</button>
+        <button id="btnSyncNow" style="background:var(--success); width:auto;">🔄 Sincronizar agora</button>
     </div>
 
     <div class="stats-grid" id="statsGrid"></div>
@@ -402,7 +418,7 @@
             <div class="form-group"><label>Total parcelas</label><input type="number" id="editTotalParcels"></div>
         </div>
         <div class="form-row">
-            <div class="form-group"><label>Senha</label><input type="password" id="editSenha" placeholder="Digite a senha"></div>
+            <div class="form-group"><label>Senha</label><input type="password" id="editSenha" placeholder="Digite a senha (270601)"></div>
         </div>
         <div class="form-row">
             <button id="saveEditBtn">💾 Salvar alterações</button>
@@ -452,13 +468,121 @@
 </div>
 
 <script>
+    // ============================================================
+    // CONFIGURAÇÃO DO GOOGLE SHEETS
+    // ============================================================
+    // URL do seu App Script publicado (SUBSTITUA PELA SUA URL REAL)
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXzXpU4WYL3mFhPNojR5H7OqZwMdJZF3w9TY2ap0rK6NMyb3FdTefkH2-5ViDRrK8A/exec";
+    
     const SENHA = "270601";
     let dividas = [];
     let nextId = 1;
     let currentMonth = new Date().toISOString().slice(0,7);
     let filterCartao = "all";
+    let sincronizando = false;
     const CARD_DUE = { A: 10, B: 25 };
 
+    // ============================================================
+    // FUNÇÕES DE SINCronização COM GOOGLE SHEETS
+    // ============================================================
+    function atualizarStatusSync(texto, tipo) {
+        const el = document.getElementById('syncStatus');
+        if(el) {
+            el.innerHTML = texto;
+            el.className = `sync-status sync-${tipo}`;
+        }
+    }
+
+    async function salvarParaPlanilha() {
+        if(sincronizando) return;
+        sincronizando = true;
+        atualizarStatusSync("🔄 Salvando na planilha...", "syncing");
+        
+        try {
+            const dadosParaSalvar = dividas.map(d => ({
+                id: d.id,
+                nome: d.nome,
+                whats: d.whats,
+                valorParcela: d.valorParcela,
+                totalParcelas: d.totalParcelas,
+                parcelaAtual: d.parcelaAtual,
+                cartao: d.cartao,
+                inicio: d.inicio,
+                pagamentos: d.pagamentos || []
+            }));
+            
+            const response = await fetch(`${SCRIPT_URL}?action=save`, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `dados=${JSON.stringify(dadosParaSalvar)}`
+            });
+            
+            atualizarStatusSync("✅ Dados salvos na planilha!", "success");
+            setTimeout(() => atualizarStatusSync("✅ Sincronizado", "success"), 3000);
+        } catch (error) {
+            console.error("Erro ao salvar na planilha:", error);
+            atualizarStatusSync("⚠️ Erro ao salvar (funciona localmente)", "error");
+        } finally {
+            sincronizando = false;
+        }
+    }
+
+    async function carregarDaPlanilha() {
+        atualizarStatusSync("🔄 Carregando dados da planilha...", "syncing");
+        
+        try {
+            const response = await fetch(`${SCRIPT_URL}?action=load`);
+            const data = await response.json();
+            
+            if(data.success && data.data && data.data.length > 0) {
+                const dadosCarregados = data.data.map(row => ({
+                    id: parseInt(row[0]),
+                    nome: row[1],
+                    whats: row[2],
+                    valorParcela: parseFloat(row[3]),
+                    totalParcelas: parseInt(row[4]),
+                    parcelaAtual: parseInt(row[5]),
+                    cartao: row[6],
+                    inicio: row[7],
+                    pagamentos: JSON.parse(row[8] || '[]')
+                }));
+                
+                if(dadosCarregados.length > 0) {
+                    dividas = dadosCarregados;
+                    nextId = Math.max(...dividas.map(d => d.id), 0) + 1;
+                    salvarLocal();
+                    atualizarTela();
+                    atualizarStatusSync("✅ Dados carregados da planilha!", "success");
+                    return;
+                }
+            }
+            atualizarStatusSync("📋 Nenhum dado na planilha", "success");
+        } catch (error) {
+            console.log("Erro ao carregar da planilha, usando dados locais:", error);
+            atualizarStatusSync("⚠️ Usando dados locais", "error");
+        }
+    }
+
+    // ============================================================
+    // FUNÇÕES LOCAIS (localStorage)
+    // ============================================================
+    function salvarLocal() { 
+        localStorage.setItem('dividas_cartao_final', JSON.stringify(dividas)); 
+        localStorage.setItem('dividas_nextId_final', nextId); 
+    }
+    
+    function carregarLocal() {
+        let stored = localStorage.getItem('dividas_cartao_final');
+        let storedId = localStorage.getItem('dividas_nextId_final');
+        if(stored) dividas = JSON.parse(stored);
+        if(storedId) nextId = parseInt(storedId);
+        if(!dividas.length) dividas = [];
+    }
+
+    // ============================================================
+    // FUNÇÕES DE CÁLCULO
+    // ============================================================
     function calcularDataInicioAutomatico(parcelasPagas, cartao) {
         let hoje = new Date();
         let diaVencimento = CARD_DUE[cartao];
@@ -488,26 +612,9 @@
         return `${String(finalDia).padStart(2,'0')}/${String(mesVenc).padStart(2,'0')}/${anoVenc}`;
     }
 
-    function salvarDados() { 
-        localStorage.setItem('dividas_cartao_final', JSON.stringify(dividas)); 
-        localStorage.setItem('dividas_nextId_final', nextId); 
-        console.log("Dados salvos:", dividas.length);
-    }
-    
-    function carregarDados() {
-        let stored = localStorage.getItem('dividas_cartao_final');
-        let storedId = localStorage.getItem('dividas_nextId_final');
-        if(stored) {
-            dividas = JSON.parse(stored);
-            console.log("Dados carregados:", dividas.length);
-        }
-        if(storedId) nextId = parseInt(storedId);
-        if(!dividas.length) {
-            dividas = [];
-            console.log("Nenhum dado encontrado, iniciando vazio");
-        }
-    }
-
+    // ============================================================
+    // FUNÇÕES DE FILTRO E EXIBIÇÃO
+    // ============================================================
     function getFiltered() {
         let ativos = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
         let nome = document.getElementById('filtroNome').value.toLowerCase();
@@ -635,6 +742,9 @@
         atualizarTela();
     }
 
+    // ============================================================
+    // FUNÇÕES GLOBAIS (WhatsApp)
+    // ============================================================
     window.abrirWhats = function(id) {
         let divida = dividas.find(d => d.id === id);
         if(!divida) return;
@@ -647,6 +757,9 @@
         document.getElementById('modalWhats').classList.remove('hidden');
     };
     
+    // ============================================================
+    // EVENTOS
+    // ============================================================
     document.getElementById('btnEnviarWhats').onclick = () => {
         let numero = document.getElementById('whatsNumero').value.replace(/\D/g, '');
         let mensagem = encodeURIComponent(document.getElementById('whatsMensagem').value);
@@ -656,7 +769,7 @@
     };
     document.getElementById('btnFecharWhats').onclick = () => document.getElementById('modalWhats').classList.add('hidden');
     
-    document.getElementById('createLoanBtn').onclick = () => {
+    document.getElementById('createLoanBtn').onclick = async () => {
         let nome = document.getElementById('newName').value.trim();
         let whats = document.getElementById('newWhats').value.trim();
         let valor = parseFloat(document.getElementById('newInstallment').value);
@@ -688,8 +801,9 @@
         };
         
         dividas.push(novaDivida);
-        salvarDados();
+        salvarLocal();
         atualizarTela();
+        await salvarParaPlanilha();
         
         document.getElementById('newName').value = '';
         document.getElementById('newWhats').value = '';
@@ -698,11 +812,10 @@
         document.getElementById('newPaid').value = '0';
         document.getElementById('newDate').value = '';
         
-        alert(`✅ Dívida cadastrada com sucesso!\n\n📅 Data início calculada: ${inicio}`);
-        console.log("Dívida adicionada:", novaDivida);
+        alert(`✅ Dívida cadastrada com sucesso!\n\n📅 Data início: ${inicio}\n💾 Dados salvos na planilha!`);
     };
     
-    document.getElementById('payInstallmentBtn').onclick = () => {
+    document.getElementById('payInstallmentBtn').onclick = async () => {
         let id = parseInt(document.getElementById('payLoanSelect').value);
         let data = document.getElementById('payDate').value;
         let divida = dividas.find(d => d.id === id);
@@ -712,9 +825,10 @@
         if(!divida.pagamentos) divida.pagamentos = [];
         divida.pagamentos.push({ data: data, parcela: divida.parcelaAtual });
         divida.parcelaAtual++;
-        salvarDados();
+        salvarLocal();
         atualizarTela();
-        alert("✅ Pagamento registrado com sucesso!");
+        await salvarParaPlanilha();
+        alert("✅ Pagamento registrado e salvo na planilha!");
         document.getElementById('payDate').value = '';
     };
     
@@ -724,7 +838,7 @@
         return true;
     }
     
-    document.getElementById('saveEditBtn').onclick = () => {
+    document.getElementById('saveEditBtn').onclick = async () => {
         if(!verificarSenha()) return;
         let id = parseInt(document.getElementById('editLoanSelect').value);
         let divida = dividas.find(d => d.id === id);
@@ -736,20 +850,22 @@
         if(novoTotal < divida.parcelaAtual) divida.parcelaAtual = novoTotal;
         divida.totalParcelas = novoTotal;
         if(divida.parcelaAtual > divida.totalParcelas) divida.parcelaAtual = divida.totalParcelas + 1;
-        salvarDados();
+        salvarLocal();
         atualizarTela();
-        alert("✅ Dívida atualizada!");
+        await salvarParaPlanilha();
+        alert("✅ Dívida atualizada e salva na planilha!");
         document.getElementById('editSenha').value = '';
     };
     
-    document.getElementById('deleteLoanBtn').onclick = () => {
+    document.getElementById('deleteLoanBtn').onclick = async () => {
         if(!verificarSenha()) return;
         let id = parseInt(document.getElementById('editLoanSelect').value);
         if(confirm("⚠️ Tem certeza que deseja excluir esta dívida permanentemente?")) {
             dividas = dividas.filter(d => d.id !== id);
-            salvarDados();
+            salvarLocal();
             atualizarTela();
-            alert("✅ Dívida excluída!");
+            await salvarParaPlanilha();
+            alert("✅ Dívida excluída da planilha!");
             document.getElementById('editSenha').value = '';
         }
     };
@@ -758,6 +874,10 @@
         document.getElementById('filtroNome').value = '';
         document.getElementById('mesReferencia').value = '';
         atualizarTela();
+    };
+    
+    document.getElementById('btnSyncNow').onclick = async () => {
+        await carregarDaPlanilha();
     };
     
     document.getElementById('exportExcelBtn').onclick = () => {
@@ -789,18 +909,19 @@
     };
     
     document.getElementById('restoreBtn').onclick = () => document.getElementById('restoreFile').click();
-    document.getElementById('restoreFile').onchange = (e) => {
+    document.getElementById('restoreFile').onchange = async (e) => {
         let file = e.target.files[0];
         if(!file) return;
         let reader = new FileReader();
-        reader.onload = ev => {
+        reader.onload = async (ev) => {
             try {
                 let data = JSON.parse(ev.target.result);
                 dividas = data.dividas || [];
                 nextId = data.nextId || 1;
-                salvarDados();
+                salvarLocal();
                 atualizarTela();
-                alert("✅ Backup restaurado com sucesso!");
+                await salvarParaPlanilha();
+                alert("✅ Backup restaurado e salvo na planilha!");
             } catch(e) { alert("❌ Erro ao restaurar backup: arquivo inválido"); }
         };
         reader.readAsText(file);
@@ -827,9 +948,18 @@
     document.getElementById('filtroNome').addEventListener('input', () => atualizarTela());
     document.getElementById('mesReferencia').addEventListener('change', () => atualizarTela());
     
-    carregarDados();
-    atualizarTela();
-    console.log("Sistema iniciado!");
+    // ============================================================
+    // INICIALIZAÇÃO
+    // ============================================================
+    async function init() {
+        carregarLocal();
+        if(dividas.length === 0) {
+            await carregarDaPlanilha();
+        }
+        atualizarTela();
+    }
+    
+    init();
 </script>
 </body>
 </html>
