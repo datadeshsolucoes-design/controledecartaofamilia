@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle do Cartão - Dashboard</title>
+    <title>Controle do Cartão</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, sans-serif; }
         body { background: #f1f5f9; padding: 20px; font-size: 18px; }
         .container { max-width: 1300px; margin: 0 auto; }
 
-        /* CABEÇALHO COM BOTÃO DE TEMA NO CANTO DIREITO */
-        .topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        /* HEADER COM BOTÃO DE TEMA NO CANTO DIREITO */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
         h1 { font-size: 1.8rem; color: #1e293b; }
-        .btn-tema { background: white; border: 1px solid #ccc; border-radius: 40px; padding: 8px 20px; cursor: pointer; font-weight: 500; }
+        .theme-toggle { background: white; border: 1px solid #ccc; border-radius: 40px; padding: 8px 20px; cursor: pointer; font-weight: 500; }
 
         /* FILTROS */
-        .filtros { background: white; padding: 15px; border-radius: 20px; margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
+        .filtros { background: white; padding: 15px 20px; border-radius: 20px; margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
         .filtros input, .filtros select { padding: 8px 12px; border-radius: 30px; border: 1px solid #ccc; }
         .btn-limpar { background: #64748b; color: white; border: none; padding: 8px 16px; border-radius: 30px; cursor: pointer; }
 
@@ -25,12 +25,12 @@
         .card h3 { font-size: 0.85rem; color: #555; margin-bottom: 5px; }
         .card .valor { font-size: 1.6rem; font-weight: bold; color: #2563eb; }
 
-        <!-- BOTÕES DE AÇÃO LADO A LADO -->
-        .botoes-acao { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+        /* BOTÕES DE AÇÃO (LADO A LADO) */
+        .botoes-acao { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
         .btn-acao { background: white; border: 1px solid #ccc; padding: 10px 20px; border-radius: 40px; cursor: pointer; font-weight: 600; }
         .btn-acao.ativo { background: #3b82f6; color: white; border-color: #3b82f6; }
 
-        <!-- FORMULÁRIOS -->
+        /* FORMULÁRIOS */
         .form-painel { background: white; padding: 20px; border-radius: 20px; margin-bottom: 25px; display: none; }
         .form-painel.ativo { display: block; }
         .form-linha { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; }
@@ -39,22 +39,27 @@
         .form-grupo input, .form-grupo select { width: 100%; padding: 10px; border-radius: 12px; border: 1px solid #ccc; }
         button { background: #3b82f6; color: white; border: none; padding: 10px 18px; border-radius: 30px; cursor: pointer; font-weight: 600; }
         .btn-danger { background: #ef4444; }
+        .btn-sm { padding: 5px 12px; font-size: 0.8rem; }
 
-        <!-- ABAS DE FILTRO LADO A LADO -->
-        .abas-filtro { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-        .aba-filtro { background: transparent; border: none; padding: 10px 24px; border-radius: 40px; cursor: pointer; font-weight: 600; color: #666; }
+        /* ABAS DE FILTRO (LADO A LADO) */
+        .abas-filtro { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+        .aba-filtro { background: transparent; border: none; padding: 8px 24px; border-radius: 40px; cursor: pointer; font-weight: 600; color: #666; }
         .aba-filtro.ativo { background: #3b82f6; color: white; }
 
+        /* LISTA DE DÍVIDAS */
         .divida-card { background: white; border-radius: 16px; padding: 15px; margin-bottom: 12px; border-left: 5px solid #3b82f6; }
         .divida-header { display: flex; justify-content: space-between; flex-wrap: wrap; margin-bottom: 8px; font-weight: bold; }
+        .badge { background: #e2e8f0; padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; }
         .progresso { height: 6px; background: #e2e8f0; border-radius: 10px; margin: 10px 0; }
         .progresso-preenchido { background: #10b981; height: 100%; border-radius: 10px; }
 
+        /* TABELA */
         table { width: 100%; background: white; border-radius: 16px; overflow: hidden; margin-top: 15px; border-collapse: collapse; }
         th { background: #3b82f6; color: white; padding: 10px; text-align: left; }
         td { padding: 10px; border-bottom: 1px solid #e2e8f0; }
         .overflow { overflow-x: auto; }
 
+        /* MODAL */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
         .modal-conteudo { background: white; padding: 25px; border-radius: 24px; width: 90%; max-width: 400px; }
         .hidden { display: none; }
@@ -69,20 +74,19 @@
 </head>
 <body>
 <div class="container">
-    <div class="topo">
+    <div class="header">
         <h1>💳 Controle do Cartão</h1>
-        <button class="btn-tema" id="btnTema">🌙 Modo escuro</button>
+        <button class="theme-toggle" id="btnTema">🌙 Modo escuro</button>
     </div>
 
     <div class="filtros">
-        <input type="month" id="mesRef">
-        <input type="text" id="filtroNome" placeholder="🔍 Nome">
+        <input type="month" id="mesRef" placeholder="Mês referência">
+        <input type="text" id="filtroNome" placeholder="🔍 Filtrar por nome">
         <button class="btn-limpar" id="limparFiltros">🧹 Limpar</button>
     </div>
 
     <div class="cards" id="cards"></div>
 
-    <!-- BOTÕES DE AÇÃO LADO A LADO -->
     <div class="botoes-acao">
         <button class="btn-acao ativo" data-acao="novo">➕ Nova dívida</button>
         <button class="btn-acao" data-acao="pagar">💰 Pagar parcela</button>
@@ -107,6 +111,7 @@
         <button id="salvarNovo">✅ Salvar dívida</button>
     </div>
 
+    <!-- FORMULÁRIO PAGAR -->
     <div id="painel-pagar" class="form-painel">
         <h3>💰 Pagar parcela</h3>
         <div class="form-linha">
@@ -116,6 +121,7 @@
         <button id="confirmarPagar">✅ Confirmar pagamento</button>
     </div>
 
+    <!-- FORMULÁRIO EDITAR -->
     <div id="painel-editar" class="form-painel">
         <h3>✏️ Editar/Excluir</h3>
         <div class="form-linha">
@@ -123,11 +129,14 @@
             <div class="form-grupo"><label>Valor parcela</label><input type="number" id="editarValor"></div>
             <div class="form-grupo"><label>Total parcelas</label><input type="number" id="editarTotal"></div>
         </div>
-        <div class="form-linha"><div class="form-grupo"><label>Senha</label><input type="password" id="editarSenha" placeholder="Senha"></div></div>
+        <div class="form-linha">
+            <div class="form-grupo"><label>Senha</label><input type="password" id="editarSenha" placeholder="Senha"></div>
+        </div>
         <button id="salvarEdicao">💾 Salvar</button>
         <button id="excluirDivida" class="btn-danger">🗑️ Excluir</button>
     </div>
 
+    <!-- FORMULÁRIO BACKUP -->
     <div id="painel-backup" class="form-painel">
         <h3>💾 Backup/Excel</h3>
         <button id="exportarExcel">📊 Baixar Excel</button>
@@ -138,9 +147,9 @@
 
     <!-- ABAS DE FILTRO (LADO A LADO) -->
     <div class="abas-filtro">
-        <button class="aba-filtro ativo" data-filtro="all">📋 Todos os cartões</button>
-        <button class="aba-filtro" data-filtro="A">💳 Cartão A (dia 10)</button>
-        <button class="aba-filtro" data-filtro="B">💳 Cartão B (dia 25)</button>
+        <button class="aba-filtro ativo" data-filtro="all">📋 Todos</button>
+        <button class="aba-filtro" data-filtro="A">💳 Cartão A</button>
+        <button class="aba-filtro" data-filtro="B">💳 Cartão B</button>
     </div>
 
     <h2>📋 Dívidas ativas</h2>
@@ -151,60 +160,188 @@
 
     <h2>📊 Tabela completa</h2>
     <div class="overflow">
-        <table id="tabelaCompleta"><thead><tr><th>Nome</th><th>Cartão</th><th>Parcela</th><th>Valor</th><th>Faltam</th><th>Total pendente</th><th>WhatsApp</th></tr></thead><tbody id="tabelaBody"></tbody></table>
+        <table id="tabelaCompleta">
+            <thead><tr><th>Nome</th><th>Cartão</th><th>Parcela</th><th>Valor</th><th>Faltam</th><th>Total pendente</th><th>WhatsApp</th></tr></thead>
+            <tbody id="tabelaBody"></tbody>
+        </table>
     </div>
 </div>
 
+<!-- MODAL WHATSAPP -->
 <div id="modalWhats" class="modal hidden">
-    <div class="modal-conteudo"><h3>📲 Enviar WhatsApp</h3><input type="text" id="whatsNumero" placeholder="Número com DDD"><textarea id="whatsMsg" rows="4"></textarea><button id="enviarWhats">📲 Enviar</button><button id="fecharWhats">Cancelar</button></div>
+    <div class="modal-conteudo">
+        <h3>📲 Enviar WhatsApp</h3>
+        <input type="text" id="whatsNumero" placeholder="Número com DDD">
+        <textarea id="whatsMsg" rows="4" placeholder="Mensagem..."></textarea>
+        <button id="enviarWhats">📲 Enviar</button>
+        <button id="fecharWhats">Cancelar</button>
+    </div>
 </div>
 
 <script>
     const SENHA = "270601";
-    let dados = [], proximoId = 1, filtroAtual = "all";
+    let dados = [];
+    let proximoId = 1;
+    let filtroAtual = "all";
+    let acaoAtual = "novo";
 
     function salvar() { localStorage.setItem('dividas', JSON.stringify(dados)); localStorage.setItem('proximoId', proximoId); }
-    function carregar() { let saved = localStorage.getItem('dividas'); if(saved) dados = JSON.parse(saved); let savedId = localStorage.getItem('proximoId'); if(savedId) proximoId = parseInt(savedId); if(!dados.length) dados = []; }
+    function carregar() {
+        let saved = localStorage.getItem('dividas');
+        let savedId = localStorage.getItem('proximoId');
+        if(saved) dados = JSON.parse(saved);
+        if(savedId) proximoId = parseInt(savedId);
+        if(!dados.length) dados = [];
+    }
 
-    function vencimento(inicio, parcela, cartao) { if(!inicio) return null; let [ano, mes] = inicio.split('-').map(Number); let dia = cartao === 'A' ? 10 : 25; let mesVenc = mes + parcela - 1; let anoVenc = ano; while(mesVenc > 12) { mesVenc -= 12; anoVenc++; } return `${String(dia).padStart(2,'0')}/${String(mesVenc).padStart(2,'0')}/${anoVenc}`; }
+    function vencimento(inicio, parcela, cartao) {
+        if(!inicio) return null;
+        let [ano, mes] = inicio.split('-').map(Number);
+        let dia = cartao === 'A' ? 10 : 25;
+        let mesVenc = mes + parcela - 1;
+        let anoVenc = ano;
+        while(mesVenc > 12) { mesVenc -= 12; anoVenc++; }
+        return `${String(dia).padStart(2,'0')}/${String(mesVenc).padStart(2,'0')}/${anoVenc}`;
+    }
 
-    function filtrar() { let ativos = dados.filter(d => d.parcelaAtual <= d.total); let nome = document.getElementById('filtroNome').value.toLowerCase(); if(nome) ativos = ativos.filter(d => d.nome.toLowerCase().includes(nome)); if(filtroAtual !== 'all') ativos = ativos.filter(d => d.cartao === filtroAtual); return ativos; }
+    function filtrar() {
+        let ativos = dados.filter(d => d.parcelaAtual <= d.total);
+        let nome = document.getElementById('filtroNome').value.toLowerCase();
+        if(nome) ativos = ativos.filter(d => d.nome.toLowerCase().includes(nome));
+        if(filtroAtual !== 'all') ativos = ativos.filter(d => d.cartao === filtroAtual);
+        return ativos;
+    }
 
     function atualizarTela() {
         let ativos = filtrar();
-        let totalDivida = dados.filter(d => d.parcelaAtual <= d.total).reduce((s,d) => s + (d.total - d.parcelaAtual + 1) * d.valor, 0);
+        let totalDivida = dados.filter(d => d.parcelaAtual <= d.total).reduce((s, d) => s + (d.total - d.parcelaAtual + 1) * d.valor, 0);
         document.getElementById('cards').innerHTML = `<div class="card"><h3>💰 Dívida total</h3><div class="valor">R$ ${totalDivida.toFixed(2)}</div></div><div class="card"><h3>📦 Dívidas ativas</h3><div class="valor">${ativos.length}</div></div>`;
         
         let htmlAtivas = '';
-        for(let d of ativos) { let faltam = d.total - d.parcelaAtual + 1; let pendente = faltam * d.valor; let percent = ((d.parcelaAtual-1)/d.total)*100; htmlAtivas += `<div class="divida-card"><div class="divida-header"><span>${d.nome} (Cartão ${d.cartao})</span><span class="badge">${d.parcelaAtual}/${d.total}</span></div><div>💰 R$ ${d.valor.toFixed(2)}/mês</div><div>📅 Vencimento: ${vencimento(d.inicio, d.parcelaAtual, d.cartao) || '—'}</div><div class="progresso"><div class="progresso-preenchido" style="width:${percent}%"></div></div><div><strong>Faltam ${faltam}x = R$ ${pendente.toFixed(2)}</strong></div><div style="margin-top:10px;"><button class="btn-sm" onclick="abrirWhats(${d.id})">📲 Cobrar WhatsApp</button></div></div>`; }
+        for(let d of ativos) {
+            let faltam = d.total - d.parcelaAtual + 1;
+            let pendente = faltam * d.valor;
+            let percent = ((d.parcelaAtual-1)/d.total)*100;
+            htmlAtivas += `<div class="divida-card"><div class="divida-header"><span>${d.nome} (Cartão ${d.cartao})</span><span class="badge">${d.parcelaAtual}/${d.total}</span></div>
+                <div>💰 R$ ${d.valor.toFixed(2)}/mês</div>
+                <div>📅 Vencimento: ${vencimento(d.inicio, d.parcelaAtual, d.cartao) || '—'}</div>
+                <div class="progresso"><div class="progresso-preenchido" style="width:${percent}%"></div></div>
+                <div><strong>Faltam ${faltam}x = R$ ${pendente.toFixed(2)}</strong></div>
+                <div style="margin-top:10px;"><button class="btn-sm" onclick="abrirWhats(${d.id})">📲 Cobrar WhatsApp</button></div>
+            </div>`;
+        }
         document.getElementById('listaAtivas').innerHTML = htmlAtivas || '<p>Nenhuma dívida ativa.</p>';
         
-        let quitadas = dados.filter(d => d.parcelaAtual > d.total); if(filtroAtual !== 'all') quitadas = quitadas.filter(d => d.cartao === filtroAtual); let htmlQuitadas = ''; for(let d of quitadas) htmlQuitadas += `<div class="divida-card" style="border-left-color:#10b981"><div><strong>${d.nome}</strong> (QUITADA) - ${d.total}x R$ ${d.valor}</div><div>Início: ${d.inicio}</div></div>`; document.getElementById('listaQuitadas').innerHTML = htmlQuitadas || '<p>Nenhuma dívida quitada.</p>';
+        let quitadas = dados.filter(d => d.parcelaAtual > d.total);
+        if(filtroAtual !== 'all') quitadas = quitadas.filter(d => d.cartao === filtroAtual);
+        let htmlQuitadas = '';
+        for(let d of quitadas) htmlQuitadas += `<div class="divida-card" style="border-left-color:#10b981"><div><strong>${d.nome}</strong> (QUITADA) - ${d.total}x R$ ${d.valor}</div><div>Início: ${d.inicio}</div></div>`;
+        document.getElementById('listaQuitadas').innerHTML = htmlQuitadas || '<p>Nenhuma dívida quitada.</p>';
         
-        let todosAtivos = dados.filter(d => d.parcelaAtual <= d.total); let tabelaHtml = ''; for(let d of todosAtivos) { let faltam = d.total - d.parcelaAtual + 1; tabelaHtml += `<tr><td>${d.nome}</td><td>${d.cartao}</td><td>${d.parcelaAtual}/${d.total}</td><td>R$ ${d.valor.toFixed(2)}</td><td>${faltam}</td><td>R$ ${(faltam*d.valor).toFixed(2)}</td><td><button onclick="abrirWhats(${d.id})">📲</button></td></tr>`; } document.getElementById('tabelaBody').innerHTML = tabelaHtml || '<tr><td colspan="7">Nenhuma dívida ativa</td></tr>';
+        let todosAtivos = dados.filter(d => d.parcelaAtual <= d.total);
+        let tabelaHtml = '';
+        for(let d of todosAtivos) {
+            let faltam = d.total - d.parcelaAtual + 1;
+            tabelaHtml += `<tr><td>${d.nome}</td><td>${d.cartao}</td><td>${d.parcelaAtual}/${d.total}</td><td>R$ ${d.valor.toFixed(2)}</td><td>${faltam}</td><td>R$ ${(faltam*d.valor).toFixed(2)}</td><td><button class="btn-sm" onclick="abrirWhats(${d.id})">📲</button></td></tr>`;
+        }
+        document.getElementById('tabelaBody').innerHTML = tabelaHtml || '<tr><td colspan="7">Nenhuma dívida ativa</td></tr>';
         
-        document.getElementById('pagarSelect').innerHTML = todosAtivos.map(d => `<option value="${d.id}">${d.nome} (${d.cartao}) - ${d.parcelaAtual}/${d.total} - R$ ${d.valor}</option>`).join('');
-        let editarSelect = document.getElementById('editarSelect'); editarSelect.innerHTML = dados.map(d => `<option value="${d.id}">${d.nome} (${d.cartao}) - ${d.parcelaAtual}/${d.total}</option>`).join('');
-        let selecionado = dados.find(d => d.id == editarSelect.value); if(selecionado) { document.getElementById('editarValor').value = selecionado.valor; document.getElementById('editarTotal').value = selecionado.total; }
+        let pagarSelect = document.getElementById('pagarSelect');
+        pagarSelect.innerHTML = todosAtivos.map(d => `<option value="${d.id}">${d.nome} (${d.cartao}) - ${d.parcelaAtual}/${d.total} - R$ ${d.valor}</option>`).join('');
+        
+        let editarSelect = document.getElementById('editarSelect');
+        editarSelect.innerHTML = dados.map(d => `<option value="${d.id}">${d.nome} (Cartão ${d.cartao}) - ${d.parcelaAtual}/${d.total}</option>`).join('');
+        let selecionado = dados.find(d => d.id == editarSelect.value);
+        if(selecionado) { document.getElementById('editarValor').value = selecionado.valor; document.getElementById('editarTotal').value = selecionado.total; }
     }
 
-    window.abrirWhats = function(id) { let d = dados.find(x => x.id === id); if(!d) return; let faltam = d.total - d.parcelaAtual + 1; let msg = `Olá ${d.nome}! Dívida cartão ${d.cartao}: ${d.parcelaAtual}/${d.total} - R$ ${d.valor.toFixed(2)}/mês. Faltam ${faltam}x = R$ ${(faltam*d.valor).toFixed(2)}. Vencimento: ${vencimento(d.inicio, d.parcelaAtual, d.cartao)}`; document.getElementById('whatsNumero').value = d.whats || ''; document.getElementById('whatsMsg').value = msg; document.getElementById('modalWhats').classList.remove('hidden'); };
-    document.getElementById('enviarWhats').onclick = () => { let num = document.getElementById('whatsNumero').value.replace(/\D/g, ''); let msg = encodeURIComponent(document.getElementById('whatsMsg').value); if(num) window.open(`https://wa.me/55${num}?text=${msg}`, '_blank'); else alert("Número inválido"); document.getElementById('modalWhats').classList.add('hidden'); };
+    window.abrirWhats = function(id) {
+        let d = dados.find(x => x.id === id);
+        if(!d) return;
+        let faltam = d.total - d.parcelaAtual + 1;
+        let msg = `Olá ${d.nome}! Dívida cartão ${d.cartao}: ${d.parcelaAtual}/${d.total} - R$ ${d.valor.toFixed(2)}/mês. Faltam ${faltam}x = R$ ${(faltam*d.valor).toFixed(2)}. Vencimento: ${vencimento(d.inicio, d.parcelaAtual, d.cartao)}`;
+        document.getElementById('whatsNumero').value = d.whats || '';
+        document.getElementById('whatsMsg').value = msg;
+        document.getElementById('modalWhats').classList.remove('hidden');
+    };
+    
+    document.getElementById('enviarWhats').onclick = () => {
+        let num = document.getElementById('whatsNumero').value.replace(/\D/g, '');
+        let msg = encodeURIComponent(document.getElementById('whatsMsg').value);
+        if(num) window.open(`https://wa.me/55${num}?text=${msg}`, '_blank');
+        else alert("Número inválido");
+        document.getElementById('modalWhats').classList.add('hidden');
+    };
     document.getElementById('fecharWhats').onclick = () => document.getElementById('modalWhats').classList.add('hidden');
     
-    document.getElementById('salvarNovo').onclick = () => { let nome = document.getElementById('novoNome').value.trim(); let whats = document.getElementById('novoWhats').value.trim(); let valor = parseFloat(document.getElementById('novoValor').value); let total = parseInt(document.getElementById('novoTotal').value); let pagas = parseInt(document.getElementById('novoPagas').value) || 0; let cartao = document.getElementById('novoCartao').value; let inicio = document.getElementById('novoInicio').value || new Date().toISOString().slice(0,10); if(!nome || isNaN(valor) || isNaN(total) || valor<=0 || total<=0) { alert("Preencha todos os campos"); return; } if(pagas >= total) { alert("Parcelas pagas não pode ser maior ou igual ao total"); return; } dados.push({ id: proximoId++, nome, whats, valor, total, parcelaAtual: pagas+1, cartao, inicio, pagamentos: [] }); salvar(); atualizarTela(); alert("Dívida cadastrada!"); document.getElementById('novoNome').value = ''; document.getElementById('novoWhats').value = ''; document.getElementById('novoValor').value = ''; document.getElementById('novoTotal').value = ''; document.getElementById('novoPagas').value = '0'; document.getElementById('novoInicio').value = ''; };
-    document.getElementById('confirmarPagar').onclick = () => { let id = parseInt(document.getElementById('pagarSelect').value); let data = document.getElementById('pagarData').value; let d = dados.find(x => x.id === id); if(!d || d.parcelaAtual > d.total) { alert("Dívida já quitada"); return; } if(!data) { alert("Data obrigatória"); return; } if(!d.pagamentos) d.pagamentos = []; d.pagamentos.push({ data, parcela: d.parcelaAtual }); d.parcelaAtual++; salvar(); atualizarTela(); alert("Pagamento registrado!"); document.getElementById('pagarData').value = ''; };
+    document.getElementById('salvarNovo').onclick = () => {
+        let nome = document.getElementById('novoNome').value.trim();
+        let whats = document.getElementById('novoWhats').value.trim();
+        let valor = parseFloat(document.getElementById('novoValor').value);
+        let total = parseInt(document.getElementById('novoTotal').value);
+        let pagas = parseInt(document.getElementById('novoPagas').value) || 0;
+        let cartao = document.getElementById('novoCartao').value;
+        let inicio = document.getElementById('novoInicio').value || new Date().toISOString().slice(0,10);
+        if(!nome || isNaN(valor) || isNaN(total) || valor<=0 || total<=0) { alert("Preencha todos os campos"); return; }
+        if(pagas >= total) { alert("Parcelas pagas não pode ser maior ou igual ao total"); return; }
+        dados.push({ id: proximoId++, nome, whats, valor, total, parcelaAtual: pagas+1, cartao, inicio, pagamentos: [] });
+        salvar(); atualizarTela();
+        document.getElementById('novoNome').value = ''; document.getElementById('novoWhats').value = '';
+        document.getElementById('novoValor').value = ''; document.getElementById('novoTotal').value = '';
+        document.getElementById('novoPagas').value = '0'; document.getElementById('novoInicio').value = '';
+        alert("Dívida cadastrada!");
+    };
+    
+    document.getElementById('confirmarPagar').onclick = () => {
+        let id = parseInt(document.getElementById('pagarSelect').value);
+        let data = document.getElementById('pagarData').value;
+        let d = dados.find(x => x.id === id);
+        if(!d || d.parcelaAtual > d.total) { alert("Dívida já quitada"); return; }
+        if(!data) { alert("Data obrigatória"); return; }
+        if(!d.pagamentos) d.pagamentos = [];
+        d.pagamentos.push({ data, parcela: d.parcelaAtual });
+        d.parcelaAtual++;
+        salvar(); atualizarTela();
+        alert("Pagamento registrado!");
+        document.getElementById('pagarData').value = '';
+    };
+    
     function verificarSenha() { if(document.getElementById('editarSenha').value !== SENHA) { alert("Senha incorreta!"); return false; } return true; }
-    document.getElementById('salvarEdicao').onclick = () => { if(!verificarSenha()) return; let id = parseInt(document.getElementById('editarSelect').value); let d = dados.find(x => x.id === id); if(!d) return; let novoValor = parseFloat(document.getElementById('editarValor').value); let novoTotal = parseInt(document.getElementById('editarTotal').value); if(isNaN(novoValor) || isNaN(novoTotal)) return; d.valor = novoValor; if(novoTotal < d.parcelaAtual) d.parcelaAtual = novoTotal; d.total = novoTotal; if(d.parcelaAtual > d.total) d.parcelaAtual = d.total + 1; salvar(); atualizarTela(); alert("Atualizado!"); document.getElementById('editarSenha').value = ''; };
-    document.getElementById('excluirDivida').onclick = () => { if(!verificarSenha()) return; let id = parseInt(document.getElementById('editarSelect').value); if(confirm("Excluir permanentemente?")) { dados = dados.filter(x => x.id !== id); salvar(); atualizarTela(); alert("Excluído!"); document.getElementById('editarSenha').value = ''; } };
+    
+    document.getElementById('salvarEdicao').onclick = () => {
+        if(!verificarSenha()) return;
+        let id = parseInt(document.getElementById('editarSelect').value);
+        let d = dados.find(x => x.id === id);
+        if(!d) return;
+        let novoValor = parseFloat(document.getElementById('editarValor').value);
+        let novoTotal = parseInt(document.getElementById('editarTotal').value);
+        if(isNaN(novoValor) || isNaN(novoTotal)) return;
+        d.valor = novoValor;
+        if(novoTotal < d.parcelaAtual) d.parcelaAtual = novoTotal;
+        d.total = novoTotal;
+        if(d.parcelaAtual > d.total) d.parcelaAtual = d.total + 1;
+        salvar(); atualizarTela();
+        alert("Atualizado!"); document.getElementById('editarSenha').value = '';
+    };
+    
+    document.getElementById('excluirDivida').onclick = () => {
+        if(!verificarSenha()) return;
+        let id = parseInt(document.getElementById('editarSelect').value);
+        if(confirm("Excluir permanentemente?")) { dados = dados.filter(x => x.id !== id); salvar(); atualizarTela(); alert("Excluído!"); document.getElementById('editarSenha').value = ''; }
+    };
+    
     document.getElementById('limparFiltros').onclick = () => { document.getElementById('filtroNome').value = ''; document.getElementById('mesRef').value = ''; atualizarTela(); };
     document.getElementById('exportarExcel').onclick = () => { let ws = XLSX.utils.json_to_sheet(dados.map(d => ({ Nome: d.nome, WhatsApp: d.whats, Valor: d.valor, Total: d.total, ParcelaAtual: d.parcelaAtual, Cartão: d.cartao, Início: d.inicio }))); let wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Dividas"); XLSX.writeFile(wb, `dividas.xlsx`); };
     document.getElementById('fazerBackup').onclick = () => { let a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify({dados, proximoId})])); a.download = 'backup.json'; a.click(); };
     document.getElementById('restaurarBackup').onclick = () => document.getElementById('restaurarArquivo').click();
     document.getElementById('restaurarArquivo').onchange = (e) => { let file = e.target.files[0]; if(!file) return; let reader = new FileReader(); reader.onload = ev => { try { let data = JSON.parse(ev.target.result); dados = data.dados || []; proximoId = data.proximoId || 1; salvar(); atualizarTela(); alert("Restaurado!"); } catch(e) { alert("Erro"); } }; reader.readAsText(file); };
+    
     document.getElementById('btnTema').onclick = () => { document.body.classList.toggle('escuro'); document.getElementById('btnTema').innerText = document.body.classList.contains('escuro') ? '☀️ Claro' : '🌙 Escuro'; };
-    document.querySelectorAll('.btn-acao').forEach(btn => { btn.onclick = () => { document.querySelectorAll('.btn-acao').forEach(b => b.classList.remove('ativo')); btn.classList.add('ativo'); document.querySelectorAll('.form-painel').forEach(p => p.classList.remove('ativo')); document.getElementById(`painel-${btn.getAttribute('data-acao')}`).classList.add('ativo'); }; });
+    
+    document.querySelectorAll('.btn-acao').forEach(btn => { btn.onclick = () => { acaoAtual = btn.getAttribute('data-acao'); document.querySelectorAll('.btn-acao').forEach(b => b.classList.remove('ativo')); btn.classList.add('ativo'); document.querySelectorAll('.form-painel').forEach(p => p.classList.remove('ativo')); document.getElementById(`painel-${acaoAtual}`).classList.add('ativo'); }; });
+    
     document.querySelectorAll('.aba-filtro').forEach(btn => { btn.onclick = () => { filtroAtual = btn.getAttribute('data-filtro'); document.querySelectorAll('.aba-filtro').forEach(b => b.classList.remove('ativo')); btn.classList.add('ativo'); atualizarTela(); }; });
+    
     document.getElementById('filtroNome').addEventListener('input', () => atualizarTela());
     carregar(); atualizarTela();
 </script>
