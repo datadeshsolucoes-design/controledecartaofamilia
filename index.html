@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Controle do Cartão - Dois Cartões</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Inter', sans-serif;
+            transition: background 0.3s ease, color 0.2s;
+        }
+
+        :root {
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --text: #0f172a;
+            --text-light: #475569;
+            --border: #e2e8f0;
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --purple: #8b5cf6;
+            --pink: #ec4899;
+            --shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.02);
+        }
+
+        body.dark {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f1f5f9;
+            --text-light: #94a3b8;
+            --border: #334155;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, var(--primary), var(--purple), var(--pink));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .controls-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            background: var(--card);
+            padding: 15px 20px;
+            border-radius: 24px;
+            margin-bottom: 25px;
+            border: 1px solid var(--border);
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg);
+            padding: 5px 12px;
+            border-radius: 40px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        select, input {
+            padding: 8px 12px;
+            border-radius: 40px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .stat-card h3 {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 500;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .form-panel {
+            background: var(--card);
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+            display: none;
+        }
+
+        .form-panel.active {
+            display: block;
+        }
+
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-light);
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-danger { background: var(--danger); }
+        .btn-warning { background: var(--warning); }
+        .btn-sm { padding: 6px 12px; font-size: 0.75rem; width: auto; }
+
+        .loan-card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border-left: 5px solid var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .loan-header {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .badge {
+            background: var(--bg);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: var(--border);
+            border-radius: 10px;
+            margin: 12px 0;
+        }
+
+        .progress-fill {
+            background: var(--success);
+            height: 100%;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 700px) {
+            body { padding: 12px; }
+            .stat-card .value { font-size: 1.3rem; }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>💳 Controle do Cartão</h1>
+        <button class="tab-btn" id="themeToggle" style="background:var(--card); color:var(--text); width:auto;">🌙 Modo escuro</button>
+    </div>
+
+    <!-- Filtros e seletor de mês -->
+    <div class="controls-bar">
+        <div class="filter-group">
+            <label>📅 Mês:</label>
+            <select id="monthSelector"></select>
+        </div>
+        <div class="filter-group">
+            <label>🔍 Nome:</label>
+            <input type="text" id="nameFilter" placeholder="Digite o nome">
+        </div>
+        <div class="filter-group">
+            <label>💳 Cartão:</label>
+            <select id="cardFilter">
+                <option value="all">Ambos</option>
+                <option value="A">Cartão A (dia 10)</option>
+                <option value="B">Cartão B (dia 25)</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Cards dinâmicos -->
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <!-- Abas de ação -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="newLoan">➕ Novo empréstimo</button>
+        <button class="tab-btn" data-tab="pay">💰 Pagar parcela</button>
+        <button class="tab-btn" data-tab="edit">✏️ Editar/Excluir</button>
+        <button class="tab-btn" data-tab="undo">⏪ Desfazer</button>
+        <button class="tab-btn" data-tab="backup">💾 Backup/Excel</button>
+    </div>
+
+    <!-- NOVO EMPRÉSTIMO -->
+    <div id="newLoan" class="form-panel active">
+        <h3>➕ Cadastrar novo empréstimo</h3>
+        <div class="form-row">
+            <div class="form-group"><label>Nome</label><input type="text" id="newName" placeholder="Ex: Ana"></div>
+            <div class="form-group"><label>Valor parcela (R$)</label><input type="number" id="newInstallment" placeholder="250"></div>
+            <div class="form-group"><label>Total parcelas</label><input type="number" id="newTotal" placeholder="10"></div>
+            <div class="form-group"><label>Cartão</label><select id="newCard"><option value="A">Cartão A (vence dia 10)</option><option value="B">Cartão B (vence dia 25)</option></select></div>
+            <div class="form-group"><label>Data início</label><input type="date" id="newDate"></div>
+        </div>
+        <button id="createLoanBtn">✅ Criar empréstimo</button>
+    </div>
+
+    <!-- PAGAR PARCELA -->
+    <div id="pay" class="form-panel">
+        <h3>💰 Pagar parcela</h3>
+        <div class="form-row">
+            <div class="form-group"><label>Empréstimo</label><select id="payLoanSelect"></select></div>
+            <div class="form-group"><label>Data do pagamento</label><input type="date" id="payDate"></div>
+        </div>
+        <button id="payInstallmentBtn">✅ Confirmar pagamento</button>
+    </div>
+
+    <!-- EDITAR/EXCLUIR -->
+    <div id="edit" class="form-panel">
+        <h3>✏️ Editar/excluir empréstimo</h3>
+        <div class="form-row">
+            <div class="form-group"><label>Empréstimo</label><select id="editLoanSelect"></select></div>
+            <div class="form-group"><label>Valor parcela</label><input type="number" id="editInstallmentValue"></div>
+            <div class="form-group"><label>Total parcelas</label><input type="number" id="editTotalParcels"></div>
+        </div>
+        <div class="form-row">
+            <button id="saveEditBtn">💾 Salvar</button>
+            <button id="deleteLoanBtn" class="btn-danger">🗑️ Excluir</button>
+        </div>
+    </div>
+
+    <!-- DESFAZER PAGAMENTO -->
+    <div id="undo" class="form-panel">
+        <h3>⏪ Desfazer último pagamento</h3>
+        <div class="form-row"><div class="form-group"><label>Empréstimo</label><select id="undoLoanSelect"></select></div></div>
+        <button id="undoLastPaymentBtn" class="btn-warning">↩️ Desfazer</button>
+    </div>
+
+    <!-- BACKUP -->
+    <div id="backup" class="form-panel">
+        <h3>💾 Exportar / Importar</h3>
+        <div class="form-row">
+            <button id="exportExcelBtn">📊 Baixar Excel</button>
+            <button id="backupBtn">📁 Backup JSON</button>
+            <input type="file" id="restoreFile" accept=".json" style="display:none">
+            <button id="restoreBtn">🔄 Restaurar</button>
+        </div>
+    </div>
+
+    <!-- LISTAS -->
+    <h2>📋 Empréstimos ativos</h2>
+    <div id="activeLoansList"></div>
+    <h2 style="margin-top:30px;">✅ Quitados</h2>
+    <div id="paidLoansList"></div>
+</div>
+
+<script>
+    let loans = [];
+    let nextId = 1;
+    let currentMonth = new Date().toISOString().slice(0,7); // YYYY-MM
+
+    // Datas de vencimento dos cartões
+    const CARD_DUE = { A: 10, B: 25 };
+
+    function calculateDueDate(startDate, installmentIndex, cardType) {
+        if (!startDate) return null;
+        let [year, month, _] = startDate.split('-').map(Number);
+        let dueDay = CARD_DUE[cardType];
+        let dueMonth = month + installmentIndex - 1;
+        let dueYear = year;
+        while (dueMonth > 12) { dueMonth -= 12; dueYear++; }
+        let lastDay = new Date(dueYear, dueMonth, 0).getDate();
+        let finalDay = Math.min(dueDay, lastDay);
+        return `${dueYear}-${String(dueMonth).padStart(2,'0')}-${String(finalDay).padStart(2,'0')}`;
+    }
+
+    function getNextDueDate(loan) {
+        if (loan.status !== 'active') return null;
+        let idx = loan.currentInstallment;
+        return calculateDueDate(loan.startDate, idx, loan.card);
+    }
+
+    function saveToLocal() {
+        localStorage.setItem('cartao_loans_v2', JSON.stringify(loans));
+        localStorage.setItem('cartao_nextId_v2', nextId);
+    }
+
+    function loadFromLocal() {
+        const stored = localStorage.getItem('cartao_loans_v2');
+        const storedId = localStorage.getItem('cartao_nextId_v2');
+        if(stored) loans = JSON.parse(stored);
+        if(storedId) nextId = parseInt(storedId);
+        if(!loans.length) initSample();
+    }
+
+    function initSample() {
+        loans = [
+            { id: nextId++, name: "Ana", installmentValue: 275, totalInstallments: 10, currentInstallment: 3, status: "active", startDate: "2025-03-05", card: "A", payments: [{date:"2025-04-05", installmentPaid:1},{date:"2025-05-05", installmentPaid:2}] },
+            { id: nextId++, name: "Ana", installmentValue: 350, totalInstallments: 8, currentInstallment: 5, status: "active", startDate: "2025-02-10", card: "B", payments: [{date:"2025-03-25", installmentPaid:1},{date:"2025-04-25", installmentPaid:2},{date:"2025-05-25", installmentPaid:3},{date:"2025-06-25", installmentPaid:4}] },
+            { id: nextId++, name: "João", installmentValue: 500, totalInstallments: 6, currentInstallment: 2, status: "active", startDate: "2025-06-01", card: "A", payments: [{date:"2025-07-10", installmentPaid:1}] }
+        ];
+        saveToLocal();
+    }
+
+    function updateUI() {
+        renderMonthSelector();
+        renderStats();
+        renderLoans();
+        populateSelects();
+    }
+
+    function renderMonthSelector() {
+        const sel = document.getElementById('monthSelector');
+        const years = [2025,2026];
+        let opts = '';
+        for(let y of years) {
+            for(let m=1; m<=12; m++) {
+                let val = `${y}-${String(m).padStart(2,'0')}`;
+                let label = `${y}/${m}`;
+                opts += `<option value="${val}" ${val===currentMonth ? 'selected' : ''}>${label}</option>`;
+            }
+        }
+        sel.innerHTML = opts;
+        sel.onchange = (e) => { currentMonth = e.target.value; updateUI(); };
+    }
+
+    function getFilteredLoans() {
+        let filtered = loans.filter(l => l.status === 'active');
+        const name = document.getElementById('nameFilter').value.toLowerCase();
+        const card = document.getElementById('cardFilter').value;
+        if(name) filtered = filtered.filter(l => l.name.toLowerCase().includes(name));
+        if(card !== 'all') filtered = filtered.filter(l => l.card === card);
+        return filtered;
+    }
+
+    function getPaymentsInMonth(month) {
+        let total = 0;
+        loans.forEach(loan => {
+            loan.payments?.forEach(p => {
+                if(p.date.startsWith(month)) total += loan.installmentValue;
+            });
+        });
+        return total;
+    }
+
+    function getDueInMonth(month) {
+        let total = 0;
+        loans.forEach(loan => {
+            if(loan.status !== 'active') return;
+            for(let i = loan.currentInstallment; i <= loan.totalInstallments; i++) {
+                let due = calculateDueDate(loan.startDate, i, loan.card);
+                if(due && due.startsWith(month)) total += loan.installmentValue;
+            }
+        });
+        return total;
+    }
+
+    function renderStats() {
+        const activeLoans = loans.filter(l => l.status === 'active');
+        const totalDebt = activeLoans.reduce((acc, l) => acc + (l.totalInstallments - l.currentInstallment + 1) * l.installmentValue, 0);
+        const paidThisMonth = getPaymentsInMonth(currentMonth);
+        const dueThisMonth = getDueInMonth(currentMonth);
+        const [year, month] = currentMonth.split('-');
+        let nextYear = year, nextMonth = parseInt(month)+1;
+        if(nextMonth > 12) { nextMonth = 1; nextYear++; }
+        const nextMonthStr = `${nextYear}-${String(nextMonth).padStart(2,'0')}`;
+        const dueNextMonth = getDueInMonth(nextMonthStr);
+        
+        document.getElementById('statsGrid').innerHTML = `
+            <div class="stat-card"><h3>💰 Dívida total cartão</h3><div class="value">R$ ${totalDebt.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
+            <div class="stat-card"><h3>📆 A pagar em ${currentMonth}</h3><div class="value">R$ ${dueThisMonth.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
+            <div class="stat-card"><h3>✅ Pago em ${currentMonth}</h3><div class="value">R$ ${paidThisMonth.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
+            <div class="stat-card"><h3>🔮 Previsão p/ próximo mês</h3><div class="value">R$ ${dueNextMonth.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
+        `;
+    }
+
+    function renderLoans() {
+        const filtered = getFilteredLoans();
+        const activeDiv = document.getElementById('activeLoansList');
+        const paidDiv = document.getElementById('paidLoansList');
+        activeDiv.innerHTML = filtered.map(loan => {
+            const nextDue = getNextDueDate(loan);
+            const falta = loan.totalInstallments - loan.currentInstallment + 1;
+            const totalPendente = falta * loan.installmentValue;
+            const percent = ((loan.currentInstallment-1)/loan.totalInstallments)*100;
+            return `
+                <div class="loan-card">
+                    <div class="loan-header"><span>${loan.name} (Cartão ${loan.card} - vence dia ${CARD_DUE[loan.card]})</span><span class="badge">${loan.currentInstallment}/${loan.totalInstallments}</span></div>
+                    <div>💰 R$ ${loan.installmentValue.toFixed(2)} / parcela</div>
+                    <div>📅 Início: ${loan.startDate} | ${nextDue ? `🔜 Próx. venc: ${nextDue}` : '✅ Em dia'}</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
+                    <div><strong>Faltam: ${falta}x R$ ${loan.installmentValue.toFixed(2)} = R$ ${totalPendente.toFixed(2)}</strong></div>
+                    <div class="actions" style="display:flex; gap:8px; margin-top:10px;">
+                        <button class="btn-sm" onclick="sendWhatsApp(${loan.id})">📲 Cobrar WhatsApp</button>
+                    </div>
+                    <div class="history-log" style="font-size:0.7rem; margin-top:8px;">📆 Pagamentos: ${loan.payments?.map(p=>`${p.installmentPaid}ª em ${p.date}`).join(', ') || 'nenhum'}</div>
+                </div>
+            `;
+        }).join('');
+        
+        const paid = loans.filter(l => l.status === 'paid');
+        paidDiv.innerHTML = paid.map(loan => `
+            <div class="loan-card" style="border-left-color:var(--success); opacity:0.8">
+                <div><strong>${loan.name}</strong> (QUITADO) - Cartão ${loan.card} - ${loan.totalInstallments}x R$ ${loan.installmentValue}</div>
+                <div>Início: ${loan.startDate} | Fim: ${loan.payments[loan.payments.length-1]?.date || '—'}</div>
+            </div>
+        `).join('');
+    }
+
+    function populateSelects() {
+        const active = loans.filter(l => l.status === 'active');
+        const opt = active.map(l => `<option value="${l.id}">${l.name} - ${l.currentInstallment}/${l.totalInstallments} - R$ ${l.installmentValue}</option>`).join('');
+        document.getElementById('payLoanSelect').innerHTML = opt;
+        document.getElementById('editLoanSelect').innerHTML = opt;
+        document.getElementById('undoLoanSelect').innerHTML = opt;
+        const selectedLoan = loans.find(l => l.id == document.getElementById('editLoanSelect').value);
+        if(selectedLoan) {
+            document.getElementById('editInstallmentValue').value = selectedLoan.installmentValue;
+            document.getElementById('editTotalParcels').value = selectedLoan.totalInstallments;
+        }
+    }
+
+    window.sendWhatsApp = function(loanId) {
+        const loan = loans.find(l => l.id === loanId);
+        if(!loan) return;
+        const falta = loan.totalInstallments - loan.currentInstallment + 1;
+        const total = falta * loan.installmentValue;
+        const due = getNextDueDate(loan);
+        const msg = `Olá ${loan.name}, você tem ${falta} parcelas de R$ ${loan.installmentValue.toFixed(2)} restantes (total R$ ${total.toFixed(2)}). Próximo vencimento: ${due || 'consulte o responsável'}.`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    };
+
+    // Eventos
+    document.getElementById('createLoanBtn').onclick = () => {
+        const name = document.getElementById('newName').value.trim();
+        const val = parseFloat(document.getElementById('newInstallment').value);
+        const total = parseInt(document.getElementById('newTotal').value);
+        const card = document.getElementById('newCard').value;
+        let start = document.getElementById('newDate').value;
+        if(!name || isNaN(val) || isNaN(total) || val<=0 || total<=0) { alert("Preencha todos"); return; }
+        if(!start) start = new Date().toISOString().split('T')[0];
+        loans.push({ id: nextId++, name, installmentValue: val, totalInstallments: total, currentInstallment: 1, status: 'active', startDate: start, card, payments: [] });
+        saveToLocal();
+        updateUI();
+        document.getElementById('newName').value = '';
+        document.getElementById('newInstallment').value = '';
+        document.getElementById('newTotal').value = '';
+        alert("Empréstimo criado!");
+    };
+    document.getElementById('payInstallmentBtn').onclick = () => {
+        const loanId = parseInt(document.getElementById('payLoanSelect').value);
+        const payDate = document.getElementById('payDate').value;
+        if(!payDate) { alert("Data obrigatória"); return; }
+        const loan = loans.find(l => l.id === loanId);
+        if(!loan || loan.status !== 'active') return;
+        if(loan.currentInstallment > loan.totalInstallments) { alert("Já quitado"); return; }
+        loan.payments.push({ date: payDate, installmentPaid: loan.currentInstallment });
+        loan.currentInstallment++;
+        if(loan.currentInstallment > loan.totalInstallments) loan.status = 'paid';
+        saveToLocal();
+        updateUI();
+        alert("Pagamento registrado!");
+        document.getElementById('payDate').value = '';
+    };
+    document.getElementById('undoLastPaymentBtn').onclick = () => {
+        const loanId = parseInt(document.getElementById('undoLoanSelect').value);
+        const loan = loans.find(l => l.id === loanId);
+        if(!loan || loan.status !== 'active') { alert("Apenas ativos"); return; }
+        if(!loan.payments.length) { alert("Sem pagamentos"); return; }
+        loan.payments.pop();
+        loan.currentInstallment--;
+        if(loan.currentInstallment < 1) loan.currentInstallment = 1;
+        saveToLocal();
+        updateUI();
+        alert("Desfeito!");
+    };
+    document.getElementById('saveEditBtn').onclick = () => {
+        const loanId = parseInt(document.getElementById('editLoanSelect').value);
+        const loan = loans.find(l => l.id === loanId);
+        if(!loan) return;
+        const newVal = parseFloat(document.getElementById('editInstallmentValue').value);
+        const newTotal = parseInt(document.getElementById('editTotalParcels').value);
+        if(isNaN(newVal) || isNaN(newTotal)) return;
+        loan.installmentValue = newVal;
+        if(newTotal < loan.currentInstallment) loan.currentInstallment = newTotal;
+        loan.totalInstallments = newTotal;
+        if(loan.currentInstallment > loan.totalInstallments) loan.status = 'paid';
+        saveToLocal();
+        updateUI();
+        alert("Editado");
+    };
+    document.getElementById('deleteLoanBtn').onclick = () => {
+        const loanId = parseInt(document.getElementById('editLoanSelect').value);
+        if(confirm("Excluir empréstimo?")) {
+            loans = loans.filter(l => l.id !== loanId);
+            saveToLocal();
+            updateUI();
+        }
+    };
+    document.getElementById('exportExcelBtn').onclick = () => {
+        const sheet = loans.map(l => ({ Nome: l.name, Parcela: l.installmentValue, "Total Parc": l.totalInstallments, Atual: l.currentInstallment, Status: l.status, Cartão: l.card, Início: l.startDate }));
+        const ws = XLSX.utils.json_to_sheet(sheet);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Emprestimos");
+        XLSX.writeFile(wb, `cartao_${new Date().toISOString().slice(0,10)}.xlsx`);
+    };
+    document.getElementById('backupBtn').onclick = () => {
+        const data = JSON.stringify({loans, nextId});
+        const blob = new Blob([data], {type: 'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `backup_cartao.json`;
+        a.click();
+    };
+    document.getElementById('restoreBtn').onclick = () => document.getElementById('restoreFile').click();
+    document.getElementById('restoreFile').onchange = (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                loans = data.loans;
+                nextId = data.nextId;
+                saveToLocal();
+                updateUI();
+                alert("Restaurado!");
+            } catch(e) { alert("Erro"); }
+        };
+        reader.readAsText(file);
+    };
+    document.getElementById('themeToggle').onclick = () => {
+        document.body.classList.toggle('dark');
+        document.getElementById('themeToggle').innerText = document.body.classList.contains('dark') ? '☀️ Claro' : '🌙 Escuro';
+    };
+    document.querySelectorAll('.tab-btn[data-tab]').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(btn.getAttribute('data-tab')).classList.add('active');
+        };
+    });
+    
+    loadFromLocal();
+    updateUI();
+</script>
+</body>
+</html>
