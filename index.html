@@ -6,6 +6,7 @@
     <title>Controle do Cartão - Dashboard</title>
     <!-- Chart.js CDN para os gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -251,36 +252,35 @@
         .btn-warning { background: var(--warning); }
         .btn-sm { padding: 6px 12px; font-size: 0.8rem; width: auto; }
 
-        /* ABAS - Layout horizontal (uma do lado da outra) */
+        /* ABAS - Estilo igual aos botões de ação */
         .tabs-container {
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
             margin-bottom: 25px;
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 10px;
         }
 
         .filter-tab {
-            background: transparent;
-            border: none;
-            padding: 10px 28px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 12px 24px;
             border-radius: 40px;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 0.95rem;
             cursor: pointer;
-            color: var(--text-light);
+            color: var(--text);
             transition: all 0.2s;
         }
 
         .filter-tab:hover {
-            background: var(--bg);
-            color: var(--primary);
+            background: var(--primary);
+            color: white;
         }
 
         .filter-tab.active {
             background: var(--primary);
             color: white;
+            border-color: var(--primary);
         }
 
         /* Gráfico */
@@ -424,10 +424,10 @@
     <div id="form-newLoan" class="form-panel active">
         <h3>➕ Cadastrar nova dívida no cartão</h3>
         <div class="form-row">
-            <div class="form-group"><label>Nome completo</label><input type="text" id="newName" placeholder="Ex: Ana"></div>
+            <div class="form-group"><label>Nome completo *</label><input type="text" id="newName" placeholder="Ex: Ana"></div>
             <div class="form-group"><label>WhatsApp (com DDD)</label><input type="text" id="newWhats" placeholder="11999999999"></div>
-            <div class="form-group"><label>Valor da parcela (R$)</label><input type="number" id="newInstallment" placeholder="275"></div>
-            <div class="form-group"><label>Total de parcelas</label><input type="number" id="newTotal" placeholder="10"></div>
+            <div class="form-group"><label>Valor da parcela (R$) *</label><input type="number" id="newInstallment" placeholder="275"></div>
+            <div class="form-group"><label>Total de parcelas *</label><input type="number" id="newTotal" placeholder="10"></div>
         </div>
         <div class="form-row">
             <div class="form-group"><label>Parcelas já pagas</label><input type="number" id="newPaid" placeholder="0" value="0"></div>
@@ -478,7 +478,7 @@
         </div>
     </div>
 
-    <!-- ABAS: Layout horizontal (uma do lado da outra) -->
+    <!-- ABAS - Estilo igual aos botões de ação -->
     <div class="tabs-container">
         <button class="filter-tab active" data-filtro="A">💳 Cartão A (dia 10)</button>
         <button class="filter-tab" data-filtro="B">💳 Cartão B (dia 25)</button>
@@ -507,7 +507,7 @@
             <table class="data-table">
                 <thead><tr><th>Nome</th><th>Cartão</th><th>Parcela</th><th>Valor parcela</th><th>Restantes</th><th>Total pendente</th><th>WhatsApp</th></tr></thead>
                 <tbody id="tableBody"></tbody>
-             </table>
+            </table>
         </div>
     </div>
 </div>
@@ -523,7 +523,6 @@
     </div>
 </div>
 
-<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 <script>
     const SENHA = "270601";
     let dividas = [];
@@ -659,10 +658,10 @@
                     y: { 
                         ticks: { callback: (val) => `R$ ${val.toLocaleString('pt-BR')}` },
                         title: { display: true, text: 'Valor (R$)' },
-                        grid: { display: false } // Remove linhas de grade do eixo Y
+                        grid: { display: false }
                     },
                     x: {
-                        grid: { display: false } // Remove linhas de grade do eixo X
+                        grid: { display: false }
                     }
                 }
             }
@@ -683,7 +682,6 @@
     }
 
     function atualizarTela() {
-        // Se estiver na aba de gráficos, não atualiza as listas
         if(abaFiltroAtual === 'graficos') {
             alternarVisao(true);
             return;
@@ -744,7 +742,7 @@
         let ativosTabela = getAtivosParaTabela();
         let tableBody = document.getElementById('tableBody');
         if(ativosTabela.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="7">Nenhuma dívida ativa no momento.</td></td>';
+            tableBody.innerHTML = '<tr><td colspan="7">Nenhuma dívida ativa no momento.</td></tr>';
         } else {
             tableBody.innerHTML = ativosTabela.map(d => {
                 let faltam = d.totalParcelas - d.parcelaAtual + 1;
@@ -757,7 +755,7 @@
                     <td>${faltam}</td>
                     <td>R$ ${pendente.toFixed(2)}</td>
                     <td><button class="btn-sm" onclick="abrirWhats(${d.id})" style="background:#25D366;">📲</button></td>
-                </table>`;
+                </tr>`;
             }).join('');
         }
         
@@ -777,7 +775,6 @@
 
     function setAbaFiltro(filtro) {
         abaFiltroAtual = filtro;
-        // Atualiza estilo das abas
         document.querySelectorAll('.filter-tab').forEach(btn => {
             if(btn.getAttribute('data-filtro') === filtro) {
                 btn.classList.add('active');
@@ -826,19 +823,40 @@
         let pagas = parseInt(document.getElementById('newPaid').value) || 0;
         let cartao = document.getElementById('newCard').value;
         let inicio = document.getElementById('newDate').value;
-        if(!nome || isNaN(valor) || isNaN(total) || valor<=0 || total<=0) { alert("Preencha todos os campos"); return; }
+        
+        // Validação melhorada
+        if(!nome) { alert("Por favor, preencha o Nome completo"); return; }
+        if(isNaN(valor) || valor <= 0) { alert("Por favor, preencha o Valor da parcela corretamente"); return; }
+        if(isNaN(total) || total <= 0) { alert("Por favor, preencha o Total de parcelas corretamente"); return; }
         if(pagas >= total) { alert("Parcelas pagas não pode ser maior ou igual ao total"); return; }
+        if(pagas < 0) { alert("Parcelas pagas não pode ser negativo"); return; }
+        
         if(!inicio) inicio = new Date().toISOString().slice(0,10);
-        dividas.push({ id: nextId++, nome, whats, valorParcela: valor, totalParcelas: total, parcelaAtual: pagas+1, cartao, inicio, pagamentos: [] });
+        
+        dividas.push({ 
+            id: nextId++, 
+            nome, 
+            whats, 
+            valorParcela: valor, 
+            totalParcelas: total, 
+            parcelaAtual: pagas + 1, 
+            cartao, 
+            inicio, 
+            pagamentos: [] 
+        });
+        
         salvarDados();
         atualizarTela();
+        
+        // Limpar formulário
         document.getElementById('newName').value = '';
         document.getElementById('newWhats').value = '';
         document.getElementById('newInstallment').value = '';
         document.getElementById('newTotal').value = '';
         document.getElementById('newPaid').value = '0';
         document.getElementById('newDate').value = '';
-        alert("Dívida cadastrada!");
+        
+        alert("Dívida cadastrada com sucesso!");
     };
     
     document.getElementById('payInstallmentBtn').onclick = () => {
@@ -848,13 +866,13 @@
         let data = document.getElementById('payDate').value;
         let divida = dividas.find(d => d.id === id);
         if(!divida || divida.parcelaAtual > divida.totalParcelas) { alert("Dívida já quitada"); return; }
-        if(!data) { alert("Informe a data"); return; }
+        if(!data) { alert("Informe a data do pagamento"); return; }
         if(!divida.pagamentos) divida.pagamentos = [];
         divida.pagamentos.push({ data, parcela: divida.parcelaAtual });
         divida.parcelaAtual++;
         salvarDados();
         atualizarTela();
-        alert("Pagamento registrado!");
+        alert("Pagamento registrado com sucesso!");
         document.getElementById('payDate').value = '';
         document.getElementById('paySenha').value = '';
     };
@@ -872,25 +890,25 @@
         if(!divida) return;
         let novoValor = parseFloat(document.getElementById('editInstallmentValue').value);
         let novoTotal = parseInt(document.getElementById('editTotalParcels').value);
-        if(isNaN(novoValor) || isNaN(novoTotal)) return;
+        if(isNaN(novoValor) || isNaN(novoTotal)) { alert("Valores inválidos"); return; }
         divida.valorParcela = novoValor;
         if(novoTotal < divida.parcelaAtual) divida.parcelaAtual = novoTotal;
         divida.totalParcelas = novoTotal;
         if(divida.parcelaAtual > divida.totalParcelas) divida.parcelaAtual = divida.totalParcelas + 1;
         salvarDados();
         atualizarTela();
-        alert("Dívida atualizada!");
+        alert("Dívida atualizada com sucesso!");
         document.getElementById('editSenha').value = '';
     };
     
     document.getElementById('deleteLoanBtn').onclick = () => {
         if(!verificarSenha()) return;
         let id = parseInt(document.getElementById('editLoanSelect').value);
-        if(confirm("Excluir permanentemente esta dívida?")) {
+        if(confirm("Tem certeza que deseja excluir permanentemente esta dívida?")) {
             dividas = dividas.filter(d => d.id !== id);
             salvarDados();
             atualizarTela();
-            alert("Dívida excluída!");
+            alert("Dívida excluída com sucesso!");
             document.getElementById('editSenha').value = '';
         }
     };
@@ -902,7 +920,17 @@
     };
     
     document.getElementById('exportExcelBtn').onclick = () => {
-        let ws = XLSX.utils.json_to_sheet(dividas.map(d => ({ Nome: d.nome, WhatsApp: d.whats, ValorParcela: d.valorParcela, TotalParcelas: d.totalParcelas, ParcelaAtual: d.parcelaAtual, Status: d.parcelaAtual > d.totalParcelas ? 'Quitado' : 'Ativo', Cartão: d.cartao, Início: d.inicio })));
+        let dadosExport = dividas.map(d => ({ 
+            Nome: d.nome, 
+            WhatsApp: d.whats, 
+            ValorParcela: d.valorParcela, 
+            TotalParcelas: d.totalParcelas, 
+            ParcelaAtual: d.parcelaAtual, 
+            Status: d.parcelaAtual > d.totalParcelas ? 'Quitado' : 'Ativo', 
+            Cartão: d.cartao, 
+            Início: d.inicio 
+        }));
+        let ws = XLSX.utils.json_to_sheet(dadosExport);
         let wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Dividas");
         XLSX.writeFile(wb, `dividas_cartao_${new Date().toISOString().slice(0,10)}.xlsx`);
@@ -927,8 +955,8 @@
                 salvarDados();
                 atualizarTela();
                 if(abaFiltroAtual === 'graficos') atualizarGrafico();
-                alert("Backup restaurado!");
-            } catch(e) { alert("Erro ao restaurar"); }
+                alert("Backup restaurado com sucesso!");
+            } catch(e) { alert("Erro ao restaurar backup"); }
         };
         reader.readAsText(file);
     };
