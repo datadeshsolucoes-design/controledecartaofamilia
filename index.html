@@ -642,8 +642,8 @@
 </div>
 
 <script>
-    // 🔴 COLE AQUI O SEU LINK DO APPS SCRIPT 🔴
-    const API_URL = 'https://script.google.com/macros/s/AKfycbyePdxD5Alsk4egBmWB2atJAF0KhnZ-JctP3Xd-SgX4knYIORWgQcisJq8BaFY8oc8zkA/exec';
+    // ✅ SEU LINK DO APPS SCRIPT JÁ ESTÁ AQUI ✅
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzFVHyUcEFsTIl4NOHJNjzou1kUAEAPL4trXv6NMEDAWtGfgKhT8Q-gYMmfwD16hjVxaw/exec';
     
     const SENHA_ADMIN = "270601";
     let dividas = [];
@@ -660,12 +660,6 @@
         if(!dataISO) return '';
         let partes = dataISO.split('-');
         return `${partes[2]}/${partes[1]}/${partes[0]}`;
-    }
-
-    function formatarDataISO(dataBR) {
-        if(!dataBR) return '';
-        let partes = dataBR.split('/');
-        return `${partes[2]}-${partes[1]}-${partes[0]}`;
     }
 
     function calcularVencimento(inicio, parcelaAtual, cartao) {
@@ -687,9 +681,9 @@
             const result = await response.json();
             if(result.success && result.data) {
                 dividas = result.data.map(row => ({
-                    id: row[0],
+                    id: parseInt(row[0]),
                     nome: row[1],
-                    whats: row[2],
+                    whats: row[2] || '',
                     valorParcela: parseFloat(row[3]),
                     totalParcelas: parseInt(row[4]),
                     parcelaAtual: parseInt(row[5]),
@@ -697,7 +691,7 @@
                     inicio: row[7],
                     pagamentos: row[8] ? JSON.parse(row[8]) : []
                 }));
-                nextId = dividas.length > 0 ? Math.max(...dividas.map(d => parseInt(d.id))) + 1 : 1;
+                nextId = dividas.length > 0 ? Math.max(...dividas.map(d => d.id)) + 1 : 1;
                 return true;
             }
             return false;
@@ -839,7 +833,7 @@
             divActiveLoans.style.display = 'none';
             divQuitadasLista.style.display = 'none';
             divTabelaGeral.style.display = 'none';
-            atualizarGrafico();
+            setTimeout(() => atualizarGrafico(), 100);
             return;
         }
         graficosDiv.style.display = 'none';
@@ -869,95 +863,106 @@
         let pagoMes = getPaymentsInMonth(mesRef);
         let aPagarMes = getDueInMonth(mesRef);
         
-        document.getElementById('statsGrid').innerHTML = `
-            <div class="stat-card"><h3>💰 Dívida total</h3><div class="value">R$ ${totalDivida.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
-            <div class="stat-card"><h3>📆 A pagar em ${mesRef}</h3><div class="value">R$ ${aPagarMes.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
-            <div class="stat-card"><h3>✅ Pago em ${mesRef}</h3><div class="value">R$ ${pagoMes.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
-            <div class="stat-card"><h3>📦 Dívidas ativas</h3><div class="value">${todosAtivos.length}</div></div>
-        `;
+        const statsGrid = document.getElementById('statsGrid');
+        if(statsGrid) {
+            statsGrid.innerHTML = `
+                <div class="stat-card"><h3>💰 Dívida total</h3><div class="value">R$ ${totalDivida.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
+                <div class="stat-card"><h3>📆 A pagar em ${mesRef}</h3><div class="value">R$ ${aPagarMes.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
+                <div class="stat-card"><h3>✅ Pago em ${mesRef}</h3><div class="value">R$ ${pagoMes.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div></div>
+                <div class="stat-card"><h3>📦 Dívidas ativas</h3><div class="value">${todosAtivos.length}</div></div>
+            `;
+        }
         
         // Lista de dívidas ativas
         let activeDiv = document.getElementById('activeLoansList');
-        if(ativos.length === 0) {
-            activeDiv.innerHTML = '<p>Nenhuma dívida ativa.</p>';
-        } else {
-            activeDiv.innerHTML = ativos.map(d => {
-                let faltam = d.totalParcelas - d.parcelaAtual + 1;
-                let pendente = faltam * d.valorParcela;
-                let vencimento = calcularVencimento(d.inicio, d.parcelaAtual, d.cartao) || '—';
-                let percent = ((d.parcelaAtual-1)/d.totalParcelas)*100;
-                return `
-                    <div class="divida-card">
-                        <div class="divida-header"><span>${d.nome} (Cartão ${d.cartao})</span><span class="badge">${d.parcelaAtual}/${d.totalParcelas}</span></div>
-                        <div>💰 R$ ${d.valorParcela.toFixed(2)} / parcela</div>
-                        <div>📅 Início: ${formatarDataBR(d.inicio)} | 🔜 Vencimento: ${vencimento}</div>
-                        <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
-                        <div><strong>Faltam: ${faltam}x R$ ${d.valorParcela.toFixed(2)} = R$ ${pendente.toFixed(2)}</strong></div>
-                        <div>📞 WhatsApp: ${d.whats || 'não cadastrado'}</div>
-                        <div style="margin-top:10px;"><button class="btn-sm" onclick="abrirWhats(${d.id})">📲 Cobrar WhatsApp</button></div>
-                    </div>
-                `;
-            }).join('');
+        if(activeDiv) {
+            if(ativos.length === 0) {
+                activeDiv.innerHTML = '<p>Nenhuma dívida ativa.</p>';
+            } else {
+                activeDiv.innerHTML = ativos.map(d => {
+                    let faltam = d.totalParcelas - d.parcelaAtual + 1;
+                    let pendente = faltam * d.valorParcela;
+                    let vencimento = calcularVencimento(d.inicio, d.parcelaAtual, d.cartao) || '—';
+                    let percent = ((d.parcelaAtual-1)/d.totalParcelas)*100;
+                    return `
+                        <div class="divida-card">
+                            <div class="divida-header"><span>${d.nome} (Cartão ${d.cartao})</span><span class="badge">${d.parcelaAtual}/${d.totalParcelas}</span></div>
+                            <div>💰 R$ ${d.valorParcela.toFixed(2)} / parcela</div>
+                            <div>📅 Início: ${formatarDataBR(d.inicio)} | 🔜 Vencimento: ${vencimento}</div>
+                            <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
+                            <div><strong>Faltam: ${faltam}x R$ ${d.valorParcela.toFixed(2)} = R$ ${pendente.toFixed(2)}</strong></div>
+                            <div>📞 WhatsApp: ${d.whats || 'não cadastrado'}</div>
+                            <div style="margin-top:10px;"><button class="btn-sm" onclick="abrirWhats(${d.id})">📲 Cobrar WhatsApp</button></div>
+                        </div>
+                    `;
+                }).join('');
+            }
         }
         
         // Tabela de dívidas ativas
         let tableBody = document.getElementById('tableBody');
-        if(ativos.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="8">Nenhuma dívida ativa.</td></tr>';
-        } else {
-            tableBody.innerHTML = ativos.map(d => {
-                let faltam = d.totalParcelas - d.parcelaAtual + 1;
-                let pendente = faltam * d.valorParcela;
-                let vencimento = calcularVencimento(d.inicio, d.parcelaAtual, d.cartao) || '—';
-                return `<tr>
-                    <td><strong>${d.nome}</strong></td>
-                    <td>${d.cartao}</td>
-                    <td>${d.parcelaAtual}/${d.totalParcelas}</td>
-                    <td>R$ ${d.valorParcela.toFixed(2)}</td>
-                    <td>${faltam}</td>
-                    <td>R$ ${pendente.toFixed(2)}</td>
-                    <td>${vencimento}</td>
-                    <td><button class="btn-sm" onclick="abrirWhats(${d.id})" style="background:#25D366;">📲</button>
-                </tr>`;
-            }).join('');
+        if(tableBody) {
+            if(ativos.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="8">Nenhuma dívida ativa.离子</tr>';
+            } else {
+                tableBody.innerHTML = ativos.map(d => {
+                    let faltam = d.totalParcelas - d.parcelaAtual + 1;
+                    let pendente = faltam * d.valorParcela;
+                    let vencimento = calcularVencimento(d.inicio, d.parcelaAtual, d.cartao) || '—';
+                    return `<tr>
+                        <td><strong>${d.nome}</strong></td>
+                        <td>${d.cartao}</td>
+                        <td>${d.parcelaAtual}/${d.totalParcelas}</td>
+                        <td>R$ ${d.valorParcela.toFixed(2)}</d>
+                        <td>${faltam}</d>
+                        <td>R$ ${pendente.toFixed(2)}</d>
+                        <td>${vencimento}</d>
+                        <td><button class="btn-sm" onclick="abrirWhats(${d.id})" style="background:#25D366;">📲</button>
+                    </tr>`;
+                }).join('');
+            }
         }
         
         // Tabela de quitadas
         let quitadas = getQuitadas();
         let quitadasBody = document.getElementById('quitadasTableBody');
-        if(quitadas.length === 0) {
-            quitadasBody.innerHTML = '<tr><td colspan="7">Nenhuma dívida quitada.</td></tr>';
-        } else {
-            quitadasBody.innerHTML = quitadas.map(d => {
-                let totalPago = d.totalParcelas * d.valorParcela;
-                let dataQuitacao = d.pagamentos && d.pagamentos.length > 0 ? 
-                    formatarDataBR(d.pagamentos[d.pagamentos.length-1].data) : formatarDataBR(d.inicio);
-                return `<tr>
-                    <td><strong>${d.nome}</strong></td>
-                    <td>${d.cartao}</td>
-                    <td>${d.totalParcelas}</td>
-                    <td>R$ ${d.valorParcela.toFixed(2)}</td>
-                    <td>R$ ${totalPago.toFixed(2)}</td>
-                    <td>${dataQuitacao}</td>
-                    <td>${d.whats || 'não cadastrado'}</td>
-                </table>`;
-            }).join('');
+        if(quitadasBody) {
+            if(quitadas.length === 0) {
+                quitadasBody.innerHTML = '<tr><td colspan="7">Nenhuma dívida quitada.}</td></tr>';
+            } else {
+                quitadasBody.innerHTML = quitadas.map(d => {
+                    let totalPago = d.totalParcelas * d.valorParcela;
+                    let dataQuitacao = d.pagamentos && d.pagamentos.length > 0 ? 
+                        formatarDataBR(d.pagamentos[d.pagamentos.length-1].data) : formatarDataBR(d.inicio);
+                    return `<tr>
+                        <td><strong>${d.nome}</strong></d>
+                        <td>${d.cartao}</d>
+                        <td>${d.totalParcelas}</d>
+                        <td>R$ ${d.valorParcela.toFixed(2)}</d>
+                        <td>R$ ${totalPago.toFixed(2)}</d>
+                        <td>${dataQuitacao}</d>
+                        <td>${d.whats || 'não cadastrado'}</d>
+                    </tr>`;
+                }).join('');
+            }
         }
         
         // Selects para admin
         if(isAdmin) {
             let todosAtivosSelect = dividas.filter(d => d.parcelaAtual <= d.totalParcelas);
-            let select = document.getElementById('payLoanSelect');
-            if(select) select.innerHTML = todosAtivosSelect.map(d => `<option value="${d.id}">${d.nome} (${d.cartao}) - ${d.parcelaAtual}/${d.totalParcelas}</option>`).join('');
+            let paySelect = document.getElementById('payLoanSelect');
+            if(paySelect) paySelect.innerHTML = todosAtivosSelect.map(d => `<option value="${d.id}">${d.nome} (${d.cartao}) - ${d.parcelaAtual}/${d.totalParcelas}</option>`).join('');
             
             let editSelect = document.getElementById('editLoanSelect');
-            if(editSelect) editSelect.innerHTML = dividas.map(d => `<option value="${d.id}">${d.nome} (${d.cartao}) - ${d.parcelaAtual}/${d.totalParcelas}${d.parcelaAtual > d.totalParcelas ? ' [QUITADA]' : ''}</option>`).join('');
-            let selected = dividas.find(d => d.id == editSelect?.value);
-            if(selected) {
-                let editValor = document.getElementById('editInstallmentValue');
-                let editTotal = document.getElementById('editTotalParcels');
-                if(editValor) editValor.value = selected.valorParcela;
-                if(editTotal) editTotal.value = selected.totalParcelas;
+            if(editSelect) {
+                editSelect.innerHTML = dividas.map(d => `<option value="${d.id}">${d.nome} (${d.cartao}) - ${d.parcelaAtual}/${d.totalParcelas}${d.parcelaAtual > d.totalParcelas ? ' [QUITADA]' : ''}</option>`).join('');
+                let selected = dividas.find(d => d.id == editSelect.value);
+                if(selected) {
+                    let editValor = document.getElementById('editInstallmentValue');
+                    let editTotal = document.getElementById('editTotalParcels');
+                    if(editValor) editValor.value = selected.valorParcela;
+                    if(editTotal) editTotal.value = selected.totalParcelas;
+                }
             }
         }
     }
@@ -1001,6 +1006,7 @@
         else alert("Informe o número");
         document.getElementById('modalWhats').classList.add('hidden');
     });
+    
     document.getElementById('btnFecharWhats')?.addEventListener('click', () => {
         document.getElementById('modalWhats').classList.add('hidden');
     });
@@ -1102,7 +1108,7 @@
         atualizarTela();
     });
     
-    document.getElementById('exportExcelBtn')?.addEventListener('click', async () => {
+    document.getElementById('exportExcelBtn')?.addEventListener('click', () => {
         let dadosExport = dividas.map(d => ({ 
             Nome: d.nome, WhatsApp: d.whats || '', ValorParcela: d.valorParcela, 
             TotalParcelas: d.totalParcelas, ParcelaAtual: d.parcelaAtual, 
@@ -1148,6 +1154,7 @@
         document.body.classList.toggle('dark');
         let btn = document.getElementById('themeToggle');
         if(btn) btn.innerText = document.body.classList.contains('dark') ? '☀️ Modo claro' : '🌙 Modo escuro';
+        if(chartInstance) atualizarGrafico();
     });
     
     document.getElementById('logoutBtn')?.addEventListener('click', () => {
@@ -1171,6 +1178,12 @@
             return;
         }
         
+        errorDiv.classList.add('hidden');
+        
+        // Mostra loading
+        document.getElementById('btnLogin').innerText = 'Carregando...';
+        document.getElementById('btnLogin').disabled = true;
+        
         await carregarDadosCloud();
         
         if(senha === SENHA_ADMIN) {
@@ -1190,6 +1203,9 @@
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('mainContent').style.display = 'block';
         atualizarTela();
+        
+        document.getElementById('btnLogin').innerText = '🔓 Entrar';
+        document.getElementById('btnLogin').disabled = false;
     });
     
     document.getElementById('loginNome')?.addEventListener('keypress', (e) => {
